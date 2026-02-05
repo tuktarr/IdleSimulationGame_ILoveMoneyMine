@@ -97,6 +97,7 @@ namespace Util
 
 		return value;
 	}
+	
 }
 
 // 메모리 정리 함수

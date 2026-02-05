@@ -1,6 +1,7 @@
 #include "GameLevel.h"
 #include "Actor/Mine.h"
 #include "Core/Input.h"
+#include "Engine/Engine.h"
 #include <iostream>
 #include <windows.h>
 
@@ -13,7 +14,7 @@ void LogCursor(int x, int y)
 GameLevel::GameLevel()
 {
     // 일단 힙에 생성
-    Mine* testMine = new Mine(Mine::EMineType::Copper, Vector2(10, 5));
+    Mine* testMine = new Mine(Mine::EMineType::Copper, Vector2(18, 9));
     AddNewActor(testMine);
 }
 GameLevel::~GameLevel()
@@ -23,6 +24,12 @@ GameLevel::~GameLevel()
 void GameLevel::Tick(float deltaTime)
 {
     Level::Tick(deltaTime);
+
+    if (Input::Get().GetButtonDown(VK_ESCAPE))
+    {
+        Engine::Get().QuitEngine();
+        return;
+    }
 
     // 마우스 왼쪽 클릭 감지
     if (Input::Get().GetButtonDown(VK_LBUTTON))
@@ -48,13 +55,12 @@ void GameLevel::Tick(float deltaTime)
 
                 // 간단한 좌표 일치 충돌 체크 (광산 크기가 1x1이라 가정)
                 // int 형변환을 통해 정확한 정수 좌표 비교
-                if ((int)pos.x == mousePos.x && (int)pos.y == mousePos.y)
+                if (mine && mine->IsSelected(mousePos))
                 {
                     const Mine::MineData& data = mine->GetData();
 
                     std::cout << " -> [HIT!] " << data.name << " 선택됨! ("
                         << data.basicIncome << "원 생산)";
-
                     // TODO : 메뉴 오픈 로직 등이 여기에 들어감
                 }
             }

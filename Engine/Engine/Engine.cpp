@@ -31,6 +31,7 @@ namespace Wanted
 		
 		// 랜덤 종자값 설정
 		Util::SetRandomSeed();
+
 	}
 
 	Engine::~Engine()
