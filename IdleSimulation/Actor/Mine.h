@@ -37,6 +37,7 @@ public:
 public:
     Mine(EMineType type, Vector2 position);
 	~Mine();
+    const MineData& GetData() const { return *mineData; }
 
 private:	
     EMineType mineType;

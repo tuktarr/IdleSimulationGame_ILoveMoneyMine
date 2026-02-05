@@ -95,6 +95,7 @@ namespace Wanted
 			// 고정 프레임 기법.
 			if (deltaTime >= oneFrameTime)
 			{
+				input->SavePreviousInputStates();
 				input->ProcessInput();
 
 				// 프레임 처리.
@@ -105,7 +106,6 @@ namespace Wanted
 				// 이전 시간 값 갱신.
 				previousTime = currentTime;
 
-				input->SavePreviousInputStates();
 
 				// 레벨에 요청된 추가/제거 처리
 				if (mainLevel)

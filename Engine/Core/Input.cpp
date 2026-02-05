@@ -20,8 +20,17 @@ namespace Wanted
 		mouseInputHandle = GetStdHandle(STD_INPUT_HANDLE);
 
 		// 마우스 이벤트 활성화
-		DWORD mode = ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT; // Window Input 추가 권장
-		mode &= ~ENABLE_QUICK_EDIT_MODE; // 빠른 편집 모드 비활성화 (클릭 시 멈춤 방지)
+		DWORD mode = 0;
+		
+		// 기존 설정 가져오기
+		GetConsoleMode(mouseInputHandle, &mode);
+
+		// 기존 설정에 마우스 기능 추가 (OR 연산)
+		mode |= (ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_WINDOW_INPUT);
+
+		// 3. 빠른 편집 모드 제거 (AND NOT 연산)
+		mode &= ~ENABLE_QUICK_EDIT_MODE;
+
 
 		if (SetConsoleMode(mouseInputHandle, mode) == FALSE)
 		{
@@ -112,6 +121,19 @@ namespace Wanted
 				// 마우스 이벤트 처리.
 				case MOUSE_EVENT:
 				{
+					// [디버깅] 원본 좌표 확인
+					int rawX = record.Event.MouseEvent.dwMousePosition.X;
+					int rawY = record.Event.MouseEvent.dwMousePosition.Y;
+
+					// [디버깅] 버튼 상태 확인 (비트 마스크)
+					DWORD buttonState = record.Event.MouseEvent.dwButtonState;
+					bool isLeftDown = (buttonState & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
+
+					// 콘솔창 제목에 상태 출력 (화면을 어지럽히지 않음)
+					char debugMsg[256];
+					sprintf_s(debugMsg, "Mouse: (%d, %d) | LeftDown: %d", rawX, rawY, isLeftDown);
+					SetConsoleTitleA(debugMsg);
+
 					// 마우스 x 위치 설정.
 					mousePosition.x = record.Event.MouseEvent.dwMousePosition.X;
 					mousePosition.y = record.Event.MouseEvent.dwMousePosition.Y;
@@ -125,11 +147,15 @@ namespace Wanted
 						= Util::Clamp<int>(mousePosition.y, 0, Engine::Get().GetHeight() - 1);
 
 					// 마우스 클릭 여부 상태 저장.
-					keyStates[VK_LBUTTON].isKeyDown
-						= (record.Event.MouseEvent.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
+					bool isLeftPressed = (record.Event.MouseEvent.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
 
-					keyStates[VK_RBUTTON].isKeyDown
-						= (record.Event.MouseEvent.dwButtonState & RIGHTMOST_BUTTON_PRESSED) != 0;
+					keyStates[VK_LBUTTON].isKeyDown = isLeftPressed;
+
+					// [보완] 만약 더블 클릭도 인식하고 싶다면:
+					if (record.Event.MouseEvent.dwEventFlags == DOUBLE_CLICK)
+					{
+						keyStates[VK_LBUTTON].isKeyDown = true;
+					}
 				}
 				break;
 				}
