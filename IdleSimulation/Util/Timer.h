@@ -1,6 +1,8 @@
 #pragma once
 class Timer
 {
+public:
+
 	// 생성자 : 타이머 설정 시간 값 전달
 	Timer(float targetTime = 1.0f);
 
@@ -15,6 +17,9 @@ class Timer
 
 	// 목표 시간 설정 함수
 	void SetTargetTime(float newTargetTime);
+
+	// 현재 설정된 목표 시간을 반환하는 함수
+	float GetTargetTime() const { return targetTime; }
 
 private:
 	// 경과 시간 확인용 변수

@@ -8,26 +8,29 @@ const int MINE_HEIGHT = 5;
 
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", Color::Brown, 20, 100, 20, 0.1f},
+    { EMineType::Copper, "구리", Color::Brown, 30000, 100, 20, 0.1f},
     { EMineType::Silver, "은",  Color::Gray, 50, 250, 50, 0.3f},
-    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 500,0.6f},
-    { EMineType::Platinum, "백금", Color::White, 800, 10000, 1000,1.1f},
-    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000,2.0f}
+    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 500, 0.6f},
+    { EMineType::Platinum, "백금", Color::White, 800, 10000, 1000, 1.1f},
+    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000, 2.0f}
 };
 
-Mine::Mine(EMineType type, Vector2 position)
-    : Actor("", position, Color::White),
-    mineType(type),
-    isPurchased(false)
+Mine::Mine(EMineType Minetype, Vector2 position)
+    : super("", position, Color::White),
+    mineType(Minetype),
+    isPurchased(false),
+    fillTimer(0.0f)
 {
     // None(0)보다 크고 MaxCount(6)보다 작을 때만 데이터 접근
-    if (type > EMineType::None && type < EMineType::MaxCount)
+    if (Minetype > EMineType::None && Minetype < EMineType::MaxCount)
     {
         // mineInfos[0]에 접근하기 위해 -1 해줌
-        int index = (int)type - 1;
+        int index = (int)Minetype - 1;
         mineData = &mineInfos[index];
 
-        fillSpeed = mineData->defaultFillSpeed;
+        // Timer에 목표 시간 설정
+        fillTimer.SetTargetTime(mineData->defaultFillSpeed);
+
         image = const_cast<char*>(mineData->name.c_str());
         color = mineData->colorCode;
         currentLevel = 1;
@@ -77,12 +80,12 @@ void Mine::Tick(float deltaTime)
         return;
     }
 
-    fillTimer += deltaTime;
+    fillTimer.Tick(deltaTime);
 
     // 일정 시간마다 게이지 한 칸 채움
-    if (fillTimer >= fillSpeed)
+    if (fillTimer.IsTimeOut())
     {
-        fillTimer = 0.0f;
+        fillTimer.Reset();
         filledCount++;
 
         // 한 바퀴 다 돌기
@@ -190,9 +193,16 @@ void Mine::Upgrade()
     currentUpgradePrice += static_cast<long long>(currentUpgradePrice * 2.1f);
 
     // 2번째 업그레이드에서는 광산의 채굴속도 향상
-    if (currentLevel % 2 == 0 && fillSpeed > 0.02f)
+    if (currentLevel % 2 == 0)
     {
-        fillSpeed *= 0.97f;
+        // 현재 목표 시간을 가져와서 20% 단축
+        float currentSpeed = fillTimer.GetTargetTime();
+        if (currentSpeed > 0.02f)
+        {
+            currentSpeed *= 0.8f;
+        }
+
+        fillTimer.SetTargetTime(currentSpeed);
     }
 }
 

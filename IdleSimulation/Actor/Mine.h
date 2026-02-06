@@ -2,6 +2,7 @@
 #include "Actor/Actor.h"
 #include <string>
 #include "Math/Color.h"
+#include "Util/Timer.h"
 #include <vector>
 #include <functional>
 
@@ -25,7 +26,7 @@ public:
     };
 
     struct MineData {
-        EMineType type;           // 타입
+        EMineType Minetype;           // 타입
         std::string name;         // 이름 ("구리")
         Color colorCode;          // 색상 코드
         long long basicIncome;    // 기본 수입
@@ -62,11 +63,13 @@ public:
         onCycleComplete = callback;
     }
 
+    EMineType GetMinetype() { return mineType; }
+    
     // 광산의 가변 데이터 Getter
     int GetLevel() const { return currentLevel; }
     long long GetUpgradePrice() const { return currentUpgradePrice; }
     long long GetIncome() const { return currentIncome; }
-
+    Timer GetTimer() const { return fillTimer; }
 private:
     void GeneratePath();
 
@@ -92,8 +95,7 @@ private:
     std::vector<Vector2> borderPath; // 테두리 좌표들
 
     int filledCount = 0;    // 현재 몇 칸이나 채워졌는지 (게이지)
-    float fillTimer = 0.0f; // 채우기 타이머
-    float fillSpeed = 0.1f; // 한 칸 채우는 시간
+    Timer fillTimer;
 
     OnCycleCompleteFuc onCycleComplete;
 };

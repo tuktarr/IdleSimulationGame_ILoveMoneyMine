@@ -7,6 +7,8 @@
 #include "Render/Renderer.h"
 #include "Util/Util.h"
 
+// Todo : LOG 띄우고 나면 사라지게 하기
+
 GameLevel::GameLevel()
 {
     // 어처피 위치정보를 가질 필요가 없으므로 그냥 생성자로 생성
@@ -49,14 +51,13 @@ void GameLevel::HandleInput()
         // 마우스 좌표 가져오기
         Vector2 mousePos = Input::Get().GetMousePosition();
 
-        // TODO : EMPTY 광산 마우스 클릭 안되도록 만들기
         // 충돌 판정 (광산을 클릭했는가?)
         for (Actor* actor : actors)
         {
             Mine* mine = actor->As<Mine>();
             if (mine != nullptr && mine->IsSelected(mousePos))
             {
-                if (mine->GetType() == static_cast<int>(Mine::EMineType::None))
+                if (mine->GetMinetype() == Mine::EMineType::None || mine->GetMinetype() == Mine::EMineType::MaxCount)
                 {
                     continue;
                 }
@@ -134,10 +135,11 @@ void GameLevel::RenderUI()
             Mine* mine = ownedMines[i];
             const Mine::MineData& data = mine->GetData();
 
-            // "광산이름 (Lv.X)" 형식으로 문자열 생성
-            std::string mineInfo = "- " + data.name + " (Lv." + std::to_string(mine->GetLevel()) + ")";
-
-            // i값을 이용해 세로로 나열 (X좌표 45, Y좌표 2부터 시작)
+            std::string speed = std::to_string(mine->GetTimer().GetTargetTime());
+            speed = speed.substr(0, speed.find('.') + 3);
+            std::string mineInfo = "- " + data.name + " (Lv." + std::to_string(mine->GetLevel()) + ")" + " [" + speed + "s]";
+            
+            // i값을 이용해 세로로 나열
             Renderer::Get().Submit(mineInfo, Vector2(mineInfoNum, 2 + i), Color::Green, 10);
         }
     }
