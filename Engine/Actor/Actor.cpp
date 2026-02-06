@@ -53,54 +53,8 @@ namespace Wanted
 
 	}
 
-	void Actor::QuitGame()
-	{
-		// 엔진 종료 요청
-		Engine::Get().QuitEngine();
-	}
-
-	bool Actor::TestIntersect(const Actor* const other)
-	{
-		// 자기자신의 x좌표 정보
-		int xMin = position.x;
-		int xMax = position.x + width - 1;
-
-		// 충돌을 비교할 다른 액터의 x좌표 정보.
-		int otherXMin = other->GetPosition().x;
-
-		// 같은 클래스의 부모를 상속하고 있으면 가능
-		int otherXMax = other->position.x + other->width - 1;
-
-		// 안 겹치는 조건 확인
-		if (otherXMin > xMax)
-		{
-			return false;
-		}
-		
-		// 다른 액터의 왼쪽 좌표가
-		// 내 오른쪽 좌표보다 더 오른쪽에 있는 경우
-		if (otherXMin > xMax)
-		{
-			return false;
-		}
-		
-		// 다른 액터의 오른쪽 좌표가
-		// 내 왼쪽 좌표보다 더 왼쪽에 있는 경우
-		if (otherXMax > xMin)
-		{
-			return false;
-		}
-
-		// Todo : Y좌표 충돌 판정 로직 구현
-		return position.y == other->position.y;
-
-	}
-
 	void Actor::SetPosition(const Vector2& newPosition)
 	{
-		// 렌더러에 빈칸 그리기 요청
-		// Renderer::Draw(position, ' ');
-
 		// 변경하려는 위치가 현재 위치와 같으면 건너뜀
 		if (position == newPosition)
 		{

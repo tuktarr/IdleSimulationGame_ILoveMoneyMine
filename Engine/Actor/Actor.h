@@ -31,12 +31,6 @@ namespace Wanted
 		// 삭제가 될 때 호출될 이벤트 함수
 		virtual void OnDestroy();
 		
-		// 게임 종료 함수
-		void QuitGame();
-
-		// 충돌 여부 확인 함수
-		bool TestIntersect(const Actor* const other);
-
 		// 위치 변경 및 읽기 함수
 		void SetPosition(const Vector2& newPosition);
 		inline Vector2 GetPosition() const { return position; }

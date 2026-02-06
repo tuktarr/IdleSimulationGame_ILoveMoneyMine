@@ -4,6 +4,7 @@
 #include "Math/Color.h"
 #include <Windows.h>
 #include <vector>
+#include <string>
 
 namespace Wanted
 {	
@@ -34,7 +35,7 @@ namespace Wanted
 		struct RenderCommand
 		{
 			// 화면에 보여줄 문자열 값
-			const char* text = nullptr;
+			std::string text;
 
 			// 좌표 (위치)
 			Vector2 position;
@@ -56,7 +57,7 @@ namespace Wanted
 
 		// 그리는데 필요한 데이터를 제출(적재)하는 함수
 		void Submit(
-			const char* text,
+			const std::string& text,
 			const Vector2& position,
 			Color color = Color::White,
 			int sortingOrder = 0

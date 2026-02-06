@@ -4,7 +4,7 @@
 
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", "C", Color::Black, 10, 100, 50, 3},
+    { EMineType::Copper, "구리", "C", Color::Brown, 10, 100, 50, 3},
     { EMineType::Silver, "은", "S", Color::Gray, 50, 500, 250, 2},
     { EMineType::Gold, "금", "G", Color::Yellow, 200, 2000, 1000, 2},
     { EMineType::Platinum, "백금","P", Color::White, 1000, 10000, 5000, 1},
@@ -29,13 +29,20 @@ Mine::Mine(EMineType type, Vector2 position)
     {
         mineData = &mineInfos[(int)type];
         currentRange = mineData->defaultRange;
-
         // 구입 후의 광산 이미지 설정
         color = mineData->colorCode;
+
+        // 가변 데이터 초기화 추가
+        currentLevel = 1;
+        currentIncome = mineData->basicIncome;
+        currentUpgradePrice = mineData->upgradePrice;
     }
     else
     {
         currentRange = 1;
+        currentLevel = 1;
+        currentIncome = 0;
+        currentUpgradePrice = 0;
     }
 
     GeneratePath();
@@ -79,13 +86,20 @@ void Mine::Tick(float deltaTime)
         if (filledCount > borderPath.size())
         {
             filledCount = 0;
+            // 수입 전달 (콜백 실행)
+            if (onCycleComplete)
+            {
+                // income은 업그레이드 할 때 마다 상승함!
+                onCycleComplete(currentIncome);
+            }
+
         }
     }
 }
 
 void Mine::Draw()
 {
-    // Renderer 인스턴스 가져오기 (Get호출 많이할거같아서)
+    // Renderer 인스턴스 가져오기
     Renderer& renderer = Renderer::Get();
 
     // 테두리 그리기
@@ -125,6 +139,21 @@ void Mine::SetRange(int newRange)
 {
     currentRange = newRange;
     GeneratePath(); // 범위가 바뀌면 경로도 다시 계산
+}
+
+void Mine::Upgrade()
+{
+    currentLevel += 1;
+    long long nextIncome = static_cast<long long>(currentIncome * 1.5f);
+    nextIncome = (nextIncome <= currentIncome) ? currentIncome + 1 : nextIncome;
+    currentIncome = nextIncome;
+    currentUpgradePrice += static_cast<long long>(currentUpgradePrice * 2.1f);
+
+    // 10번째 업그레이드에서는 광산의 채굴속도 향상
+    if (currentLevel % 10 == 0 && fillSpeed > 0.02f)
+    {
+        fillSpeed -= 0.01f;
+    }
 }
 
 void Mine::GeneratePath()

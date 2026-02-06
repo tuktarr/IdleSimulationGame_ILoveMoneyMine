@@ -94,7 +94,7 @@ namespace Wanted
 		for (const RenderCommand& command : renderQueue)
 		{
 			// 화면에 그릴 텍스트가 없으면 건너뜀
-			if (!command.text)
+			if (command.text.empty())
 			{
 				continue;
 			}
@@ -106,7 +106,7 @@ namespace Wanted
 			}
 
 			// 화면에 그릴 문자열 길이
-			const int length = static_cast<int>(strlen(command.text));
+			int length = static_cast<int>(command.text.length());
 
 			// 안그려도 되면 건너뜀
 			if (length <= 0)
@@ -190,7 +190,7 @@ namespace Wanted
 	}
 
 	void Renderer::Submit(
-		const char* text,
+		const std::string& text,
 		const Vector2& position,
 		Color color,
 		int sortingOrder)

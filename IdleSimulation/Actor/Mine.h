@@ -3,6 +3,7 @@
 #include <string>
 #include "Math/Color.h"
 #include <vector>
+#include <functional>
 
 using namespace Wanted;
 
@@ -34,6 +35,7 @@ public:
         int defaultRange; // 이 광물의 클릭 범위이자 크기
     };
 
+    // 초기에 세팅된 값을 복사해옴
     static const MineData mineInfos[(int)EMineType::MaxCount];
 
 public:
@@ -51,6 +53,24 @@ public:
 
     // 나중에 광산의 크기가 작아 질수도 커질수도 있음
     void SetRange(int newRange);
+
+    // 광산을 업그레이드 했을 때, 데이터를 수정하는 함수
+    void Upgrade();
+    
+    // 콜백 함수 타입 정의 (수입량을 인자로 받음)
+    using OnCycleCompleteFuc = std::function<void(long long)>;
+
+    // 콜백함수를 광산에 등록할 함수
+    void SetOnCycleComplete(OnCycleCompleteFuc callback)
+    {
+        onCycleComplete = callback;
+    }
+
+    // 광산의 가변 데이터 Getter
+    int GetLevel() const { return currentLevel; }
+    long long GetUpgradePrice() const { return currentUpgradePrice; }
+    long long GetIncome() const { return currentIncome; }
+
 private:
     void GeneratePath();
 
@@ -61,8 +81,15 @@ private:
     // 현재 타이머 
     float currentTimer = 0.0f;
 
+    // == 광산의 가변 데이터 ==
     // 현재 범위
     int currentRange;
+    // 현재 광산의 업그레이드 가격
+    long long currentUpgradePrice;
+    // 현재 레벨 (업그레이드를 얼마나 눌렀는지 확인하는 변수)
+    int currentLevel = 1;
+    // 현재 수입
+    long long currentIncome;
     
     // ???상태
     bool isPurchased = false;
@@ -72,5 +99,7 @@ private:
     int filledCount = 0;    // 현재 몇 칸이나 채워졌는지 (게이지)
     float fillTimer = 0.0f; // 채우기 타이머
     float fillSpeed = 0.1f; // 한 칸 채우는 시간
+
+    OnCycleCompleteFuc onCycleComplete;
 };
 
