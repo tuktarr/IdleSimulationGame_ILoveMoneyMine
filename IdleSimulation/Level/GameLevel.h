@@ -2,6 +2,7 @@
 
 #include "Level/Level.h"
 #include <string>
+#include "Util/Timer.h"
 
 class Player;
 using namespace Wanted;
@@ -20,11 +21,12 @@ private:
 	void HandleInput(); // 입력 로직
 	void RenderUI(); // 로그표시 함수
 	void InitializeMines(); // 광산 그리드 배치 및 초기화 함수
-
+	void SetLog(const std::string& message); // 로그 설정 함수
 private:
 	// 플레이어 객체
 	Player* player = nullptr;
 
 	// GameLevel의 모든 로그 담을 객체
 	std::string currentLog = "준비 완료...";
+	Timer logTimer;
 };

@@ -96,7 +96,6 @@ private:
 
     int filledCount = 0;    // 현재 몇 칸이나 채워졌는지 (게이지)
     Timer fillTimer;
-
     OnCycleCompleteFuc onCycleComplete;
 };
 

@@ -7,8 +7,6 @@
 #include "Render/Renderer.h"
 #include "Util/Util.h"
 
-// Todo : LOG 띄우고 나면 사라지게 하기
-
 GameLevel::GameLevel()
 {
     // 어처피 위치정보를 가질 필요가 없으므로 그냥 생성자로 생성
@@ -20,6 +18,9 @@ GameLevel::GameLevel()
 
     // 초기 자금
     player->AddGold(0);
+
+    // 로그 타이머 설정
+    logTimer.SetTargetTime(3.0f);
 }
 GameLevel::~GameLevel()
 {
@@ -36,6 +37,17 @@ void GameLevel::Tick(float deltaTime)
     // 로그 정보
     RenderUI();
     
+    if (!currentLog.empty())
+    {
+        logTimer.Tick(deltaTime);
+
+        // 시간 되면 로그 삭제
+        if (logTimer.IsTimeOut())
+        {
+            currentLog = ""; // 문자열 비우기
+            logTimer.Reset();
+        }
+    }
 }
 
 void GameLevel::HandleInput()
@@ -72,13 +84,13 @@ void GameLevel::HandleInput()
                         mine->Purchase();
                         player->AddMineList(mine);
                         // 로그
-                        currentLog = data.name + "구입 성공!";
+                        SetLog(data.name + "구입 성공!");
                     }
                     else
                     {
                         // 로그
                         long long lacking = data.purchasePrice - player->GetGold();
-                        currentLog = "자산 부족! " + std::to_string(lacking) + "G가 더 필요합니다.";
+                        SetLog("자산 부족! " + std::to_string(lacking) + "G가 더 필요합니다.");
                     }
                 }
                 else
@@ -89,14 +101,14 @@ void GameLevel::HandleInput()
                     if (player->TryPurchase(currentCost))
                     {
                         mine->Upgrade();
-                        currentLog = data.name + " Level Up! (LV." + std::to_string(mine->GetLevel()) +
-                            ") 수입: " + std::to_string(mine->GetIncome()) + "G";
+                        SetLog(data.name + " Level Up! (LV." + std::to_string(mine->GetLevel()) +
+                            ") 수입: " + std::to_string(mine->GetIncome()) + "G");
                     }
                     else
                     {
                         // 업그레이드 실패 로그
                         long long lacking = currentCost - player->GetGold();
-                        currentLog = "골드 부족! 업그레이드에 " + std::to_string(lacking) + "G가 부족합니다.";
+                        SetLog("골드 부족! 업그레이드에 " + std::to_string(lacking) + "G가 부족합니다.");
                     }
                 }
                 break;
@@ -179,4 +191,10 @@ void GameLevel::InitializeMines()
 
         AddNewActor(slot);
     }
+}
+
+void GameLevel::SetLog(const std::string& message)
+{
+    currentLog = message;
+    logTimer.Reset();
 }
