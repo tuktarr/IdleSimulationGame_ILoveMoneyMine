@@ -8,11 +8,11 @@ const int MINE_HEIGHT = 5;
 
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", Color::Brown, 20, 100, 50,0.1f},
-    { EMineType::Silver, "은",  Color::Gray, 50, 250, 250,0.3f},
-    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 1000,0.6f},
-    { EMineType::Platinum, "백금", Color::White, 800, 10000, 5000,1.1f},
-    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 50000, 25000,2.0f}
+    { EMineType::Copper, "구리", Color::Brown, 20, 100, 20, 0.1f},
+    { EMineType::Silver, "은",  Color::Gray, 50, 250, 50, 0.3f},
+    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 500,0.6f},
+    { EMineType::Platinum, "백금", Color::White, 800, 10000, 1000,1.1f},
+    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000,2.0f}
 };
 
 Mine::Mine(EMineType type, Vector2 position)
@@ -152,6 +152,32 @@ void Mine::Draw()
     {
         renderer.Submit("?", position, Color::Yellow, -1);
         renderer.Submit("Locked", position + Vector2(-3, 1), Color::Gray, 2);
+    }
+    if (!mineData)
+    {
+        return;
+    }
+
+    // 가격 표시 로직 추가
+    if (!isPurchased)
+    {
+        // 구매 전: 설치 비용 표시 (노란색)
+        std::string price = "BUY: " + std::to_string(mineData->purchasePrice) + "G";
+        if (mineData->purchasePrice < 10000) 
+        {
+            Renderer::Get().Submit(price, position + Vector2(-3, 3), Color::Yellow, 6);
+        }
+        else
+        {
+            Renderer::Get().Submit(price, position + Vector2(-5, 3), Color::Red, 6);
+        }
+
+    }
+    else
+    {
+        // 구매 후: 다음 업그레이드 비용 표시 (흰색)
+        std::string upgrade = "UP: " + std::to_string(GetUpgradePrice()) + "G";
+        Renderer::Get().Submit(upgrade, position + Vector2(-3, 3), Color::White, 6);
     }
 }
 
