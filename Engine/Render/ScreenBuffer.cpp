@@ -24,7 +24,7 @@ namespace Wanted
 				"Buffer creation error", 
 				MB_OK
 			);
-			__debugbreak;
+			__debugbreak();
 		}
 
 		// 콘솔 창 크기 지정

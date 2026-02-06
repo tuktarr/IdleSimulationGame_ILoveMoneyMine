@@ -2,45 +2,44 @@
 #include "Math/Vector2.h"
 #include "Render/Renderer.h"
 
+// static 멤버 데이터 (규격 고정 : 가로 12, 세로 5)
+const int MINE_WIDTH = 12;
+const int MINE_HEIGHT = 5;
+
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", "C", Color::Brown, 10, 100, 50, 3},
-    { EMineType::Silver, "은", "S", Color::Gray, 50, 500, 250, 2},
-    { EMineType::Gold, "금", "G", Color::Yellow, 200, 2000, 1000, 2},
-    { EMineType::Platinum, "백금","P", Color::White, 1000, 10000, 5000, 1},
-    { EMineType::Diamond, "다이아","D", Color::Cyan, 5000, 50000, 25000, 1}
+    { EMineType::Copper, "구리", Color::Brown, 20, 100, 50,0.1f},
+    { EMineType::Silver, "은",  Color::Gray, 50, 250, 250,0.3f},
+    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 1000,0.6f},
+    { EMineType::Platinum, "백금", Color::White, 800, 10000, 5000,1.1f},
+    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 50000, 25000,2.0f}
 };
 
 Mine::Mine(EMineType type, Vector2 position)
-    : Actor(
-        mineInfos[(int)type].symbol.c_str(),
-        position,
-        Color::White
-    ),
+    : Actor("", position, Color::White),
     mineType(type),
-    currentTimer(0.0f),
-    isPurchased((false)),
-    filledCount(0),
-    fillTimer(0.0f),
-    fillSpeed(0.1f)
-
+    isPurchased(false)
 {
-    if (type >= EMineType::Copper && type < EMineType::MaxCount)
+    // None(0)보다 크고 MaxCount(6)보다 작을 때만 데이터 접근
+    if (type > EMineType::None && type < EMineType::MaxCount)
     {
-        mineData = &mineInfos[(int)type];
-        currentRange = mineData->defaultRange;
-        // 구입 후의 광산 이미지 설정
-        color = mineData->colorCode;
+        // mineInfos[0]에 접근하기 위해 -1 해줌
+        int index = (int)type - 1;
+        mineData = &mineInfos[index];
 
-        // 가변 데이터 초기화 추가
+        fillSpeed = mineData->defaultFillSpeed;
+        image = const_cast<char*>(mineData->name.c_str());
+        color = mineData->colorCode;
         currentLevel = 1;
         currentIncome = mineData->basicIncome;
         currentUpgradePrice = mineData->upgradePrice;
     }
     else
     {
-        currentRange = 1;
-        currentLevel = 1;
+        // None 타입이거나 잘못된 타입일 때
+        mineData = nullptr;
+        image = const_cast<char*>(" "); // 또는 [ ] 
+        currentLevel = 0;
         currentIncome = 0;
         currentUpgradePrice = 0;
     }
@@ -54,6 +53,10 @@ Mine::~Mine()
 
 bool Mine::IsSelected(const Vector2& mousePos) const
 {
+    // 너비. 높이 절반
+    int halfW = MINE_WIDTH / 2;
+    int halfH = MINE_HEIGHT / 2;
+    
     // 문자가 있는 위치(중심)
     int myPosX = (int)position.x;
     int myPosY = (int)position.y;
@@ -62,8 +65,8 @@ bool Mine::IsSelected(const Vector2& mousePos) const
     int mouseX = (int)mousePos.x;
     int mouseY = (int)mousePos.y;
 
-    bool inX = (mouseX >= myPosX - currentRange) && (mouseX <= myPosX + currentRange);
-    bool inY = (mouseY >= myPosY - currentRange) && (mouseY <= myPosY + currentRange);
+    bool inX = (mouseX >= myPosX - halfW) && (mouseX <= myPosX + halfW);
+    bool inY = (mouseY >= myPosY - halfH) && (mouseY <= myPosY + halfH);
     return (inX && inY);
 }
 
@@ -101,6 +104,8 @@ void Mine::Draw()
 {
     // Renderer 인스턴스 가져오기
     Renderer& renderer = Renderer::Get();
+    int halfW = MINE_WIDTH / 2;
+    int halfH = MINE_HEIGHT / 2;
 
     // 테두리 그리기
     for (int i = 0; i < borderPath.size(); ++i)
@@ -112,7 +117,7 @@ void Mine::Draw()
 
         if (!isPurchased)
         {
-            symbol = "?";
+            symbol = ".";
             drawColor = Color::Yellow;
         }
         else
@@ -130,15 +135,24 @@ void Mine::Draw()
         }
         renderer.Submit(symbol, drawPos, drawColor, 0);
     }
+    if (mineType == EMineType::None || mineType == EMineType::MaxCount)
+    {
+        renderer.Submit("[ EMPTY ]", position + Vector2(-4, 0), Color::DarkGray, 1);
+    }
+    else if (isPurchased)
+    {
+        // 중심 심볼
+        renderer.Submit(image, position + Vector2(-1,0), mineData->colorCode, 1);
 
-    // 본체 그리기
-    Color centerColor = isPurchased ? mineData->colorCode : Color::White;
-    renderer.Submit(image, position, centerColor, 1);
-}
-void Mine::SetRange(int newRange)
-{
-    currentRange = newRange;
-    GeneratePath(); // 범위가 바뀌면 경로도 다시 계산
+        // 레벨 표시 (심볼 바로위)
+        std::string lvStr = "Lv." + std::to_string(currentLevel);
+        renderer.Submit(lvStr, position + Vector2(-2, -1), Color::White, 2);
+    }
+    else
+    {
+        renderer.Submit("?", position, Color::Yellow, -1);
+        renderer.Submit("Locked", position + Vector2(-3, 1), Color::Gray, 2);
+    }
 }
 
 void Mine::Upgrade()
@@ -149,47 +163,45 @@ void Mine::Upgrade()
     currentIncome = nextIncome;
     currentUpgradePrice += static_cast<long long>(currentUpgradePrice * 2.1f);
 
-    // 10번째 업그레이드에서는 광산의 채굴속도 향상
-    if (currentLevel % 10 == 0 && fillSpeed > 0.02f)
+    // 2번째 업그레이드에서는 광산의 채굴속도 향상
+    if (currentLevel % 2 == 0 && fillSpeed > 0.02f)
     {
-        fillSpeed -= 0.01f;
+        fillSpeed *= 0.97f;
     }
 }
 
 void Mine::GeneratePath()
 {
     borderPath.clear();
-    filledCount = 0; // 경로가 바뀌면 게이지도 초기화
-
-    if (currentRange <= 0)
-    {
-        return;
-    }
+    int halfW = MINE_WIDTH / 2;
+    int halfH = MINE_HEIGHT / 2;
 
     // 시계 방향으로 좌표 추가 (Top->Right->Bottom->Left)
 
     // 1. 위쪽 벽 (왼쪽 -> 오른쪽) x증가
-    for (int x = -currentRange; x < currentRange; ++x)
+    for (int x = -halfW; x < halfW; ++x)
     {
-        borderPath.emplace_back(Vector2(static_cast<float>(x), static_cast<float>(-currentRange)));
+        // y값 고정, x값 가변
+        borderPath.emplace_back(Vector2(x, -halfH));
     }
 
     // 2. 오른쪽 벽 (위-> 아래) y증가
-    for (int y = -currentRange; y < currentRange; ++y)
+    for (int y = -halfH; y < halfH; ++y)
     {
-        borderPath.emplace_back(Vector2(static_cast<float>(currentRange), static_cast<float>(y)));
+        // x값 고정, y값 가변
+        borderPath.emplace_back(Vector2(halfW, y));
     }
 
     // 3. 아래쪽 벽 (오른쪽 -> 왼쪽) x감소
-    for (int x = currentRange; x > -currentRange; --x)
+    for (int x = halfW; x > -halfW; --x)
     {
-        borderPath.emplace_back(Vector2(static_cast<float>(x), static_cast<float>(currentRange)));
+        borderPath.emplace_back(Vector2(x, halfH));
     }
 
     // 4. 왼쪽 벽 (아래 -> 위) y감소
-    for (int y = currentRange; y > -currentRange; --y)
+    for (int y = halfH; y > -halfH; --y)
     {
-        borderPath.emplace_back(Vector2(static_cast<float>(-currentRange), static_cast<float>(y)));
+        borderPath.emplace_back(Vector2(-halfW, y));
     }
 
  }

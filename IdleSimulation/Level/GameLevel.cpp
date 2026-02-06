@@ -3,9 +3,9 @@
 #include "Core/Input.h"
 #include "Engine/Engine.h"
 #include "Actor/Player.h"
-#include <iostream>
 #include <windows.h>
 #include "Render/Renderer.h"
+#include "Util/Util.h"
 
 GameLevel::GameLevel()
 {
@@ -13,26 +13,15 @@ GameLevel::GameLevel()
     player = new Player();
     AddNewActor(player);
 
-    Mine* copperMine = new Mine(Mine::EMineType::Copper, Vector2(18, 9));
-    copperMine->Purchase(); // 구리는 처음에 하나 주고 시작
-    // 콜백 연결 : 광산이 한 바퀴 돌면 플레이어의 자산을 추가함
-    copperMine->SetOnCycleComplete([this](long long income) 
-        {
-            if (player)
-            {
-                player->AddGold(static_cast<int>(income));
-            }
-        });
-    
-    
-    player->AddMineList(copperMine); // 플레이어 소유 목록에 추가
-    AddNewActor(copperMine);
+    // 그리드로 맵에 광산 배치
+    InitializeMines();
 
     // 초기 자금
     player->AddGold(0);
 }
 GameLevel::~GameLevel()
 {
+    
 }
 
 void GameLevel::Tick(float deltaTime)
@@ -60,12 +49,17 @@ void GameLevel::HandleInput()
         // 마우스 좌표 가져오기
         Vector2 mousePos = Input::Get().GetMousePosition();
 
+        // TODO : EMPTY 광산 마우스 클릭 안되도록 만들기
         // 충돌 판정 (광산을 클릭했는가?)
         for (Actor* actor : actors)
         {
             Mine* mine = actor->As<Mine>();
             if (mine != nullptr && mine->IsSelected(mousePos))
             {
+                if (mine->GetType() == static_cast<int>(Mine::EMineType::None))
+                {
+                    continue;
+                }
                 // 선택된 Mine의 데이터를 저장해놓음
                 const Mine::MineData& data = mine->GetData();
 
@@ -76,12 +70,6 @@ void GameLevel::HandleInput()
                         // 광산 구매된 상태로 바꿈
                         mine->Purchase();
                         player->AddMineList(mine);
-
-                        // 새로운 광산들도 Income이 들어오도록 연결
-                        mine->SetOnCycleComplete([this](long long income)
-                            {
-                                player->AddGold(income);
-                            });
                         // 로그
                         currentLog = data.name + "구입 성공!";
                     }
@@ -110,6 +98,7 @@ void GameLevel::HandleInput()
                         currentLog = "골드 부족! 업그레이드에 " + std::to_string(lacking) + "G가 부족합니다.";
                     }
                 }
+                break;
             }
         }
     }
@@ -129,7 +118,7 @@ void GameLevel::RenderUI()
 
     // 보유 광산 목록 및 레벨 표시
 
-    int mineInfoNum = 35;
+    int mineInfoNum = 75;
     Renderer::Get().Submit("-- 보유 광산 목록 --", Vector2(mineInfoNum, 1), Color::Cyan, 10);
 
     const std::vector<Mine*>& ownedMines = player->GetOwnedMines(); // Player 클래스에 getter가 있다고 가정
@@ -154,4 +143,38 @@ void GameLevel::RenderUI()
     }
 }
 
-//TODO : 그리드 방식으로 맵에 비활성화 광산들 배치하기
+void GameLevel::InitializeMines()
+{
+    // -- 3x3 그리드 배치 --
+    const int START_X = 10;  // 그리드 시작 X
+    const int START_Y = 6;   // 그리드 시작 Y
+    const int GAP_X = 16;    // 가로 간격 (상자너비 12 + 여백 4)
+    const int GAP_Y = 8;     // 세로 간격 (상자높이 5 + 여백 3)
+    for (int i = 0; i < 9; i++)
+    {
+        int row = i / 3;
+        int col = i % 3;
+
+        Vector2 pos(static_cast<float>(START_X + col * GAP_X), static_cast<float>(START_Y + row * GAP_Y));
+        Mine::EMineType potentialType = (i < (int)Mine::EMineType::MaxCount) ? static_cast<Mine::EMineType>(i + 1) : Mine::EMineType::None;
+
+        Mine* slot = new Mine(potentialType, pos);
+
+        // 구리(첫번째)만 구매된 상태로 시작
+        if (potentialType == Mine::EMineType::Copper)
+        {
+            slot->Purchase();
+            player->AddMineList(slot);
+        }
+
+        // 콜백 연결
+        slot->SetOnCycleComplete([this](long long income) {
+            if (player)
+            {
+                player->AddGold(income);
+            }
+            });
+
+        AddNewActor(slot);
+    }
+}

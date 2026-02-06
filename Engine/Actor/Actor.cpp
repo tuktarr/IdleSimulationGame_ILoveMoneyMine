@@ -8,19 +8,21 @@
 
 namespace Wanted
 {
-	Actor::Actor(const char* image, const Vector2& position, Color color)
-		:position(position), color(color)
+	Actor::Actor(const std::string& image, const Vector2& position, Color color)
+		: image(image), position(position), color(color)
 	{
+		width = static_cast<int>(image.size());
+
 		// 문자열 복사
-		width = static_cast<int>(strlen(image));
-		this->image = new char[width + 1];
-		strcpy_s(this->image, width + 1, image);
+		//width = static_cast<int>(strlen(image));
+		//this->image = new char[width + 1];
+		//strcpy_s(this->image, width + 1, image);
 	}
 
 	Actor::~Actor()
 	{
 		// 메모리 해제
-		SafeDeleteArray(image);
+		//SafeDeleteArray(image);
 	}
 
 	void Actor::BeginPlay()

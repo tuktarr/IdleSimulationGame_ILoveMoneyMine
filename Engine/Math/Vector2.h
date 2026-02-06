@@ -1,6 +1,7 @@
 #pragma once
 #include "Common/Common.h"
 #include <Windows.h>
+#include <string>
 
 namespace Wanted
 {
@@ -12,7 +13,7 @@ namespace Wanted
 		~Vector2();
 
 		// 문자열로 변환해서 반환하는 함수.
-		const char* ToString();
+		std::string ToString();
 
 		// 연산자 오버로딩
 		Vector2 operator+(const Vector2& other) const;
@@ -37,7 +38,7 @@ namespace Wanted
 
 	private:
 		// 벡터 값을 문자열로 변환할 때, 사용할 변수
-		char* string = nullptr;
+		//std::string string = nullptr;
 	};
 }
 

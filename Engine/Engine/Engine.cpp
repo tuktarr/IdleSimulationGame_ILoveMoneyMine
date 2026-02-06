@@ -28,10 +28,6 @@ namespace Wanted
 
 		// 커서 끄기
 		Util::TurnOffCursor();
-		
-		// 랜덤 종자값 설정
-		Util::SetRandomSeed();
-
 	}
 
 	Engine::~Engine()
@@ -120,6 +116,10 @@ namespace Wanted
 		Shutdown();
 
 	}
+
+	// TODO : 엔진이 꺼질 때, Util::SaveCurrentTime()을 호출해서 현재 시간을 파일에 쓴다.
+	// Engine::LoadSetting(): 설정 파일을 읽을 때, 저장된 시간도 함께 읽는다.
+	// GameLevel::BeginPlay(): 저장된 시간과 함께 시간의 차이를 계산해서 CalculatOfflineIncome() 을 실행한다. 최대 오프라인 인정시간을 둔다(8시간)
 
 	void Engine::QuitEngine()
 	{

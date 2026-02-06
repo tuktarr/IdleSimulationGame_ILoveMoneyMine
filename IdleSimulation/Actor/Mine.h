@@ -15,7 +15,7 @@ public:
 
     enum class EMineType
     {
-        None = -1,
+        None = 0,
         Copper,
         Silver,
         Gold,
@@ -27,12 +27,11 @@ public:
     struct MineData {
         EMineType type;           // 타입
         std::string name;         // 이름 ("구리")
-        std::string symbol;       // 기호 
         Color colorCode;          // 색상 코드
         long long basicIncome;    // 기본 수입
         long long purchasePrice;  // 구입 비용
         long long upgradePrice;   // 업그레이드 비용
-        int defaultRange; // 이 광물의 클릭 범위이자 크기
+        float defaultFillSpeed;    // 기본 채굴 속도
     };
 
     // 초기에 세팅된 값을 복사해옴
@@ -50,9 +49,6 @@ public:
     // 외부에서 구입했을 때, 호출하는 함수
     void Purchase() { isPurchased = true; }
     bool IsPurchased() const { return isPurchased; }
-
-    // 나중에 광산의 크기가 작아 질수도 커질수도 있음
-    void SetRange(int newRange);
 
     // 광산을 업그레이드 했을 때, 데이터를 수정하는 함수
     void Upgrade();
@@ -82,8 +78,7 @@ private:
     float currentTimer = 0.0f;
 
     // == 광산의 가변 데이터 ==
-    // 현재 범위
-    int currentRange;
+
     // 현재 광산의 업그레이드 가격
     long long currentUpgradePrice;
     // 현재 레벨 (업그레이드를 얼마나 눌렀는지 확인하는 변수)

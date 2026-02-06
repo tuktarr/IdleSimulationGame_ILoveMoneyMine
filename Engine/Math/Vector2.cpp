@@ -1,5 +1,7 @@
 #include "Vector2.h"
 #include <iostream>
+#include <sstream>
+
 namespace Wanted
 {
 	Vector2 Vector2::Zero(0,0);
@@ -20,27 +22,29 @@ namespace Wanted
 
 	Vector2::~Vector2()
 	{
-		if (string)
-		{
-			delete[] string;
-			string = nullptr;
-		}
+		//if (string)
+		//{
+		//	delete[] string;
+		//	string = nullptr;
+		//}
 	}
 
-	const char* Vector2::ToString()
+	std::string Vector2::ToString()
 	{
 		// 기존 문자열이 있다면 제거
-		if (string)
-		{
-			delete[] string;
-			string = nullptr;
-		}
-		
-		string = new char[128];
-		memset(string, 0, sizeof(char) * 128);
-		sprintf_s(string, 128, "(%d, %d)", x, y);
+		//if (string)
+		//{
+		//	delete[] string;
+		//	string = nullptr;
+		//}
+		//
+		//string = new char[128];
+		//memset(string, 0, sizeof(char) * 128);
+		//sprintf_s(string, 128, "(%d, %d)", x, y);
 
-		return string;
+		std::stringstream ss;
+		ss << "(" << x << ", " << y << ")";
+		return ss.str();
 	}
 
 	Vector2 Vector2::operator+(const Vector2& other) const
