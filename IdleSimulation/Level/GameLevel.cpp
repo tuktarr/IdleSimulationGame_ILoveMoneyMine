@@ -16,15 +16,15 @@ GameLevel::GameLevel()
     // 그리드로 맵에 광산 배치
     InitializeMines();
 
-    // 초기 자금
-    player->AddGold(0);
+    // 게임 시작 시 데이터 로드 및 오프라인 수익 계산
+    LoadAndCalcOfflineReward();
 
     // 로그 타이머 설정
     logTimer.SetTargetTime(3.0f);
 }
 GameLevel::~GameLevel()
 {
-    
+    SaveGame();
 }
 
 void GameLevel::Tick(float deltaTime)
@@ -174,12 +174,12 @@ void GameLevel::InitializeMines()
 
         Mine* slot = new Mine(potentialType, pos);
 
-        // 구리(첫번째)만 구매된 상태로 시작
-        if (potentialType == Mine::EMineType::Copper)
-        {
-            slot->Purchase();
-            player->AddMineList(slot);
-        }
+        //// 구리(첫번째)만 구매된 상태로 시작
+        //if (potentialType == Mine::EMineType::Copper)
+        //{
+        //    slot->Purchase();
+        //    player->AddMineList(slot);
+        //}
 
         // 콜백 연결
         slot->SetOnCycleComplete([this](long long income) {
@@ -197,4 +197,155 @@ void GameLevel::SetLog(const std::string& message)
 {
     currentLog = message;
     logTimer.Reset();
+}
+
+void GameLevel::SaveGame()
+{
+    FILE* file = nullptr;
+    errno_t err = fopen_s(&file, "../Config/SaveData.txt", "wt");
+
+    // 예외처리
+    if (!file || err != 0)
+    {
+        SetLog("Failed to open SaveData");
+        return;
+    }
+
+    // 플레이어 골드 저장
+    long long currentGold = player->GetGold();
+    fprintf(file, "%lld\n", currentGold);
+
+    // 현재 시간 저장
+    time_t now = time(nullptr);
+    fprintf(file, "%lld\n", (long long)now);
+
+    // 광산 정보 저장
+    for (Actor* actor : actors)
+    {
+        Mine* mine = actor->As<Mine>();
+
+        // 유효한 광산인 경우에만 저장
+        if (mine != nullptr)
+        {
+            // 광산의 타입 순서대로 저장
+            Mine::EMineType type = mine->GetMinetype();
+            if (type == Mine::EMineType::None || type == Mine::EMineType::MaxCount)
+            {
+                continue;
+            }
+
+            int isPurchased = mine->IsPurchased() ? 1 : 0;
+            int level = mine->GetLevel();
+
+            fprintf(file, "% d % d\n", isPurchased, level);
+        }
+    }
+    fclose(file);
+}
+
+// TODO 작업 : 메모장에 광산의 레벨과 생존을 숫자로 표기했는데 실행하면 다시 초기화가 되고 있음!
+void GameLevel::LoadAndCalcOfflineReward()
+{
+    FILE* file = nullptr;
+    errno_t err = fopen_s(&file, "../Config/SaveData.txt", "rt");
+
+    // 저장된 파일이 없으면 그냥 리턴
+    if (err != 0 || file == nullptr)
+    {
+        SetLog("새로운 게임을 시작합니다.");
+
+        player->AddGold(0);
+
+        for (Actor* actor : actors)
+        {
+            Mine* mine = actor->As<Mine>();
+            if (mine && mine->GetMinetype() == Mine::EMineType::Copper)
+            {
+                mine->Purchase();
+                player->AddMineList(mine);
+                break;
+            }
+        }
+        return; // 함수 종료
+    }
+
+    long long savedGold = 0;
+    long long savedTimeVal = 0;
+
+    // 데이터 읽기 (골드 -> 시간)
+    fscanf_s(file, "%lld", &savedGold);
+    fscanf_s(file, "%lld", &savedTimeVal);
+
+    // 골드 덮어쓰기
+    player->SetGold(savedGold);
+    
+    for (Actor* actor : actors)
+    {
+        Mine* mine = actor->As<Mine>();
+
+        if (mine != nullptr)
+        {
+            Mine::EMineType type = mine->GetMinetype();
+            if (type == Mine::EMineType::None || type == Mine::EMineType::MaxCount)
+            {
+                continue;
+            }
+
+            int isPurchased = 0;
+            int savedLevel = 1;
+
+            // 파일에서 숫자 2개를 읽음 (구매여부, 레벨)
+            fscanf_s(file, "%d %d", &isPurchased, &savedLevel);
+
+            if (isPurchased == 1 && !mine->IsPurchased())
+            {
+                mine->Purchase();
+                player->AddMineList(mine); // 보유목록에 등록
+            }
+
+            while (mine->GetLevel() < savedLevel)
+            {
+                mine->Upgrade();
+            }
+        }
+    }
+
+    fclose(file);
+    // 현재 시간과 SaveData.txt에 적혀있는 시간
+    time_t now = time(nullptr);
+    time_t lastTime = (time_t)savedTimeVal;
+
+    // 두 시간의 차이를 계산 초(double)단위로 반환
+    double secondsPassed = difftime(now, lastTime);
+
+    if (secondsPassed > 0)
+    {
+        long long totalOfflineIncome = 0;
+
+        const std::vector<Mine*>& mines = player->GetOwnedMines();
+
+        for (Mine* mine : mines)
+        {
+            float speed = mine->GetTimer().GetTargetTime();
+            long long income = mine->GetIncome();
+            
+            if (speed > 0.0f)
+            {
+                long long count = (long long)(secondsPassed / speed);
+                totalOfflineIncome += (count * income) / 10;
+            }
+        }
+
+        // 수익 지급 및 로그 출력
+        if (totalOfflineIncome > 0)
+        {
+            player->AddGold(totalOfflineIncome);
+
+            char logBuffer[128];
+            sprintf_s(logBuffer, "부재중 수익: %lld G (%.0f초)", totalOfflineIncome, secondsPassed);
+
+            SetLog(logBuffer);
+        }
+
+    }
 }

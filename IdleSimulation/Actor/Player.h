@@ -25,6 +25,7 @@ public:
 	// 자산 관리
 	long long GetGold() const { return gold; }
 	void AddGold(long long amount) { gold += amount; }
+	void SetGold(long long Ingold) { gold = Ingold; }
 
 private:
 	// 소유한 자산
