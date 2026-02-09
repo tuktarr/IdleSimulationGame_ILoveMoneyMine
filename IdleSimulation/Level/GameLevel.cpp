@@ -13,6 +13,16 @@ GameLevel::GameLevel()
     player = new Player();
     AddNewActor(player);
 
+    // AdManager 생성 및 등록
+    adManager = new AdManager();
+
+    adManager->Init([this]() {
+        long long reward = this->CalculateAdReward();
+        player->AddGold(reward);
+        SetLog("광고 보상! " + std::to_string(reward) + "G 획득");
+        });
+    AddNewActor(adManager);
+
     // 그리드로 맵에 광산 배치
     InitializeMines();
 
@@ -32,11 +42,20 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
-    if (!isGameClear)
+    if (adManager && adManager->IsPlayingAd())
     {
-        Level::Tick(deltaTime);
+        // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
+        // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
+        adManager->Tick(deltaTime);
     }
-
+    else
+    {
+        // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
+        if (!isGameClear)
+        {
+            Level::Tick(deltaTime);
+        }
+    }
     // 입력 후, 데이터 계속 업데이트
     HandleInput();
 
@@ -74,10 +93,27 @@ void GameLevel::HandleInput()
         return;
     }
 
+    // 마우스 좌표 가져오기
+    Vector2 mousePos = Input::Get().GetMousePosition();
+
+    if (adManager)
+    {
+        adManager->CheckHover((int)mousePos.x, (int)mousePos.y);
+    }
+
     if (Input::Get().GetButtonDown(VK_LBUTTON))
     {
-        // 마우스 좌표 가져오기
-        Vector2 mousePos = Input::Get().GetMousePosition();
+        // 광고창 클릭처리 함수
+        if (adManager && adManager->HandleClick((int)mousePos.x, (int)mousePos.y))
+        {
+            return;
+        }
+
+        // 광고 재생 중에는 다른 어떤 클릭도 못하게 막음
+        if (adManager && adManager->IsPlayingAd())
+        {
+            return;
+        }
 
         // 충돌 판정 (광산을 클릭했는가?)
         for (Actor* actor : actors)
@@ -189,9 +225,9 @@ void GameLevel::RenderUI()
     if (isGameClear)
     {
         // 화면 중앙 쯤에 승리 메시지 출력
-        Renderer::Get().Submit("★ CONGRATULATIONS! ★", Vector2(65, 14), Color::Yellow, 20);
+        Renderer::Get().Submit("★ CONGRATULATIONS! ★", Vector2(65, 13), Color::Yellow, 20);
         Renderer::Get().Submit("100억을 모아 전설의 광산을 획득했습니다!", Vector2(55, 16), Color::White, 20);
-        Renderer::Get().Submit("Press ESC to Quit", Vector2(65, 18), Color::Gray, 20);
+        Renderer::Get().Submit("Press ESC to Quit", Vector2(65, 19), Color::Gray, 20);
     }
 }
 
@@ -399,4 +435,44 @@ void GameLevel::LoadAndCalcOfflineReward()
         }
 
     }
+}
+
+long long GameLevel::CalculateAdReward()
+{
+    if (!player)
+    {
+        return 0;
+    }
+
+    // 초당 총 수익 (Earnings Per Second)
+    double totalEPS = 0.0;
+
+    const std::vector<Mine*>& mines = player->GetOwnedMines();
+    for (Mine* mine : mines)
+    {
+        if (mine->GetMinetype() == Mine::EMineType::Trophy)
+        {
+            continue;
+        }
+
+        float cycleTime = mine->GetTimer().GetTargetTime() * 32.0f;
+
+        // 0으로 나누기 방지
+        if (cycleTime > 0.0001f)
+        {
+            // (수입 / 시간) = 초당 수입
+            totalEPS += (double)mine->GetIncome() / cycleTime;
+        }
+    }
+
+    // 초당 수입 * 광고시간 5초 * 10배의 부가수익
+    long long finalReward = (long long)(totalEPS * 5.0 * 10.0);
+
+    // 만약 초반에 광고를 봤을 때의 수익이 너무 적다면 기본급 500 설정
+    if (finalReward < 500)
+    {
+        finalReward = 500;
+    }
+
+    return finalReward;
 }

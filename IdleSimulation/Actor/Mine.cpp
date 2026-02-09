@@ -8,7 +8,7 @@ const int MINE_HEIGHT = 5;
 
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", Color::Brown, 150, 100, 20, 0.1f},
+    { EMineType::Copper, "구리", Color::Brown, 70000, 100, 20, 0.1f},
     { EMineType::Silver, "은",  Color::Gray, 300, 300, 50, 0.3f},
     { EMineType::Gold, "금",  Color::Yellow, 500, 1200, 500, 0.6f},
     { EMineType::Platinum, "백금", Color::White, 1500, 10000, 1000, 1.1f},
@@ -106,8 +106,6 @@ void Mine::Tick(float deltaTime)
 
 void Mine::Draw()
 {
-    // Renderer 인스턴스 가져오기
-    Renderer& renderer = Renderer::Get();
     int halfW = MINE_WIDTH / 2;
     int halfH = MINE_HEIGHT / 2;
 
@@ -142,30 +140,30 @@ void Mine::Draw()
                 drawColor = Color::DarkGray;
             }
         }
-        renderer.Submit(symbol, drawPos, drawColor, 0);
+        Renderer::Get().Submit(symbol, drawPos, drawColor, 0);
     }
     if (mineType == EMineType::None || mineType == EMineType::MaxCount)
     {
-        renderer.Submit("[ EMPTY ]", position + Vector2(-4, 0), Color::DarkGray, 1);
+        Renderer::Get().Submit("[ EMPTY ]", position + Vector2(-4, 0), Color::DarkGray, 1);
     }
     else if (isPurchased)
     {
         // 중심 심볼
-        renderer.Submit(image, position + Vector2(-1,0), mineData->colorCode, 1);
+        Renderer::Get().Submit(image, position + Vector2(-1,0), mineData->colorCode, 1);
 
         // 레벨 표시 (심볼 바로위)
         std::string lvStr = "Lv." + std::to_string(currentLevel);
-        renderer.Submit(lvStr, position + Vector2(-2, -1), Color::White, 2);
+        Renderer::Get().Submit(lvStr, position + Vector2(-2, -1), Color::White, 2);
     }
     else if (mineType == EMineType::Trophy)
     {
-        renderer.Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
-        renderer.Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
+        Renderer::Get().Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
+        Renderer::Get().Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
     }
     else
     {
-        renderer.Submit("?", position, Color::Yellow, -1);
-        renderer.Submit("Locked", position + Vector2(-3, 1), Color::Gray, 2);
+        Renderer::Get().Submit("?", position, Color::Yellow, -1);
+        Renderer::Get().Submit("Locked", position + Vector2(-3, 1), Color::Gray, 2);
     }
     if (!mineData)
     {
@@ -193,7 +191,7 @@ void Mine::Draw()
         if (mineType != EMineType::Trophy)
         {
             std::string upgrade = "UP: " + std::to_string(GetUpgradePrice()) + "G";
-            Renderer::Get().Submit(upgrade, position + Vector2(-3, 3), Color::White, 6);
+            Renderer::Get().Submit(upgrade, position + Vector2(-5, 3), Color::White, 6);
         }
     }
 }
