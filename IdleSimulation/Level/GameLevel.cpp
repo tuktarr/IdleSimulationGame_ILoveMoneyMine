@@ -16,6 +16,9 @@ GameLevel::GameLevel()
     // 그리드로 맵에 광산 배치
     InitializeMines();
 
+    // 임시 배열에 넣은 플레이어, 광산을 level에서 관리하는 actors에 넣어줌
+    ProcessAddAndDestroyActors();
+
     // 게임 시작 시 데이터 로드 및 오프라인 수익 계산
     LoadAndCalcOfflineReward();
 
@@ -243,13 +246,12 @@ void GameLevel::SaveGame()
     fclose(file);
 }
 
-// TODO 작업 : 메모장에 광산의 레벨과 생존을 숫자로 표기했는데 실행하면 다시 초기화가 되고 있음!
 void GameLevel::LoadAndCalcOfflineReward()
 {
     FILE* file = nullptr;
     errno_t err = fopen_s(&file, "../Config/SaveData.txt", "rt");
 
-    // 저장된 파일이 없으면 그냥 리턴
+    // 저장된 파일이 없으면 새로 시작
     if (err != 0 || file == nullptr)
     {
         SetLog("새로운 게임을 시작합니다.");
@@ -266,6 +268,8 @@ void GameLevel::LoadAndCalcOfflineReward()
                 break;
             }
         }
+        // wt모드로 파일 없으면 바로 생성
+        SaveGame();
         return; // 함수 종료
     }
 
@@ -279,6 +283,10 @@ void GameLevel::LoadAndCalcOfflineReward()
     // 골드 덮어쓰기
     player->SetGold(savedGold);
     
+
+    // TODO 작업 : 현재 Load 할 때, actors가 비어있어서 for문을 지나쳐버려 맨 처음의 초기화 구문이 실행이됨
+    // actors를 mine으로 형변환하지말고 Mine을 따로 배열을 만들어서 관리하도록 로직 구성
+    // 그러면 Load시에 mine 배열을 보고 상황이 어떤지를 확인할 수 있다.
     for (Actor* actor : actors)
     {
         Mine* mine = actor->As<Mine>();
