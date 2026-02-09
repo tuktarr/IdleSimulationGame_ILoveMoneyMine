@@ -20,7 +20,8 @@ Mine::Mine(EMineType Minetype, Vector2 position)
     : super("", position, Color::White),
     mineType(Minetype),
     isPurchased(false),
-    fillTimer(0.0f)
+    fillTimer(0.0f),
+    blinkTimer(0.3f)
 {
     // None(0)보다 크고 MaxCount(6)보다 작을 때만 데이터 접근
     if (Minetype > EMineType::None && Minetype < EMineType::MaxCount)
@@ -76,6 +77,17 @@ bool Mine::IsSelected(const Vector2& mousePos) const
 
 void Mine::Tick(float deltaTime)
 {
+    if (mineType == EMineType::Trophy && !isPurchased)
+    {
+        blinkTimer.Tick(deltaTime);
+        
+        if (blinkTimer.IsTimeOut())
+        {
+            isBlinkWhite = !isBlinkWhite;
+            blinkTimer.Reset();
+        }
+    }
+
     if (!isPurchased || borderPath.empty())
     {
         return;
@@ -157,8 +169,11 @@ void Mine::Draw()
     }
     else if (mineType == EMineType::Trophy)
     {
-        Renderer::Get().Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
-        Renderer::Get().Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
+        Color blinkColor = isBlinkWhite ? Color::White : Color::DarkRed;
+        //Renderer::Get().Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
+        //Renderer::Get().Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
+        Renderer::Get().Submit(" PRESS ", position + Vector2(-4, -1), Color::DarkBlue, 6);
+        Renderer::Get().Submit(" VICTOR ", position + Vector2(-4, 0), blinkColor, 7); // 여기에 적용!
     }
     else
     {
@@ -181,7 +196,7 @@ void Mine::Draw()
         }
         else
         {
-            Renderer::Get().Submit(price, position + Vector2(-5, 3), Color::Red, 6);
+            Renderer::Get().Submit(price, position + Vector2(-6, 3), Color::Red, 6);
         }
 
     }
