@@ -85,6 +85,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor\AdManager.cpp" />
+    <ClCompile Include="Actor\HelpManager.cpp" />
     <ClCompile Include="Actor\Mine.cpp" />
     <ClCompile Include="Actor\Player.cpp" />
     <ClCompile Include="Level\GameLevel.cpp" />
@@ -93,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor\AdManager.h" />
+    <ClInclude Include="Actor\HelpManager.h" />
     <ClInclude Include="Actor\Mine.h" />
     <ClInclude Include="Actor\Player.h" />
     <ClInclude Include="Level\GameLevel.h" />

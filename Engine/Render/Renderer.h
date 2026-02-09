@@ -66,10 +66,10 @@ namespace Wanted
 		// 싱글톤 접근 함수
 		static Renderer& Get();
 
-	private:
-
 		// 화면 지우는 함수
 		void Clear();
+	
+	private:
 	
 		// 더블 버퍼링을 활용해 활성화 버퍼를 교환하는 함수
 		void Present();

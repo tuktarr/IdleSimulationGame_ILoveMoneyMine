@@ -23,6 +23,8 @@ GameLevel::GameLevel()
         });
     AddNewActor(adManager);
 
+    helpManager = new HelpManager();
+\
     // 그리드로 맵에 광산 배치
     InitializeMines();
 
@@ -38,41 +40,64 @@ GameLevel::GameLevel()
 GameLevel::~GameLevel()
 {
     SaveGame();
+    delete helpManager;
 }
 
 void GameLevel::Tick(float deltaTime)
 {
-    if (adManager && adManager->IsPlayingAd())
+
+    if (helpManager)
     {
-        // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
-        // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
-        adManager->Tick(deltaTime);
+        helpManager->Tick(deltaTime);
+    }
+
+    if (helpManager && helpManager->IsOpen())
+    {
+        return;
+    }
+ 
+        if(adManager&& adManager->IsPlayingAd())
+        {
+            // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
+            // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
+            adManager->Tick(deltaTime);
+        }
+        else if(!isGameClear)
+        {
+            // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
+            Level::Tick(deltaTime);
+            
+        }
+        // 입력 후, 데이터 계속 업데이트
+        HandleInput();
+
+        if (!currentLog.empty())
+        {
+            logTimer.Tick(deltaTime);
+
+            // 시간 되면 로그 삭제
+            if (logTimer.IsTimeOut())
+            {
+                currentLog = ""; // 문자열 비우기
+                logTimer.Reset();
+            }
+        }
+  
+}
+
+void GameLevel::Draw()
+{
+    if (helpManager && helpManager->IsOpen())
+    {
+        helpManager->Draw();
     }
     else
     {
-        // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
-        if (!isGameClear)
-        {
-            Level::Tick(deltaTime);
-        }
+        Level::Draw();
+        // 로그 정보
+        RenderUI();
     }
-    // 입력 후, 데이터 계속 업데이트
-    HandleInput();
 
-    // 로그 정보
-    RenderUI();
-    
-    if (!currentLog.empty())
-    {
-        logTimer.Tick(deltaTime);
-
-        // 시간 되면 로그 삭제
-        if (logTimer.IsTimeOut())
-        {
-            currentLog = ""; // 문자열 비우기
-            logTimer.Reset();
-        }
-    }
 }
 
 void GameLevel::HandleInput()

@@ -3,6 +3,7 @@
 #include "Level/Level.h"
 #include "Util/Timer.h"
 #include "Actor/AdManager.h"
+#include "Actor/HelpManager.h"
 #include <string>
 
 #include <stdio.h>
@@ -22,6 +23,7 @@ public:
 
 private:
 	virtual void Tick(float deltaTime) override;
+	virtual void Draw() override;
 	// 입력 로직
 	void HandleInput();
 	// 로그표시 함수
@@ -50,4 +52,7 @@ private:
 	
 	// 광고 매니저 추가
 	AdManager* adManager = nullptr;
+
+	// 도움말 매니저 추가
+	HelpManager* helpManager = nullptr;
 };

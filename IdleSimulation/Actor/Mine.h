@@ -95,7 +95,7 @@ private:
 
     std::vector<Vector2> borderPath; // 테두리 좌표들
 
-    int filledCount = 0;    // 현재 몇 칸이나 채워졌는지 (게이지)
+    int filledCount = 0; // 현재 몇 칸이나 채워졌는지 (게이지)
     Timer fillTimer;
     OnCycleCompleteFuc onCycleComplete;
 };
