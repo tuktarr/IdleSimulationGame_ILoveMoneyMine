@@ -35,19 +35,20 @@ public:
 	// 현재 광고 재생 중인지 확인 (입력 차단용)
 	bool IsPlayingAd() const { return currentState == EAdState::PLAYING; }
 
-	// 마우스 위치에 따라서 AD 버튼 활성화
-	void CheckHover(int mouseX, int mouseY);
 private:
-	const int UI_X = 70;
-	const int UI_Y = 20;
+	static const int UI_X = 70;
+	static const int UI_Y = 20;
+	static const int BUTTON_WIDTH = 10; // 버튼 크기
 
 	const float AD_DURATION = 5.0f; // 광고 지속 시간
 	const float AD_COOLDOWN = 5.0f; // 광고 다시 뜨는 시간
 	
-	bool isHovered = false; // 마우스가 버튼 위에 있는지 체크
 	EAdState currentState; // 현재 상태
 	Timer adStateTimer; // 상태 관리용 타이머
 	OnAdFinishedFunc onAdFinishedCallback; // 보상 지급 델리게이트
-	const int BUTTON_WIDTH = 10; // 버튼 크기
+
+private:
+	// 상태 / 충돌 체크 함수
+	bool IsMouseOver(int mouseX, int mouseY) const;
 };
 

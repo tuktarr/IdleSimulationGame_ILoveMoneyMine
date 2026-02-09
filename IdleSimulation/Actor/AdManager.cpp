@@ -1,5 +1,6 @@
 #include "AdManager.h"
 #include "Render/Renderer.h"
+#include "Core/Input.h"
 
 AdManager::AdManager()
 	: currentState(EAdState::HIDDEN), adStateTimer(AD_COOLDOWN)
@@ -51,6 +52,8 @@ void AdManager::Tick(float deltaTime)
 void AdManager::Draw()
 {
 	const int UI_SORT_ORDER = 100;
+	Vector2 mousePos = Input::Get().GetMousePosition();
+	bool isHovered = IsMouseOver((int)mousePos.x, (int)mousePos.y);
 
 	switch (currentState)
 	{
@@ -111,9 +114,7 @@ bool AdManager::HandleClick(int x, int y)
 		return false;
 	}
 
-	bool isButtonClick = (x >= UI_X && x <= UI_X + BUTTON_WIDTH && y == UI_Y);
-	
-	if (isButtonClick)
+	if (IsMouseOver(x, y))
 	{
 		if (currentState == EAdState::READY)
 		{
@@ -138,22 +139,13 @@ bool AdManager::HandleClick(int x, int y)
 	return false;
 }
 
-void AdManager::CheckHover(int mouseX, int mouseY)
+bool AdManager::IsMouseOver(int mouseX, int mouseY) const
 {
-	// 버튼이 없는 상태면 호버 체크 불필요
+	// 상태 체크
 	if (currentState != EAdState::READY && currentState != EAdState::FINISHED)
 	{
-		isHovered = false;
-		return;
+		return false;
 	}
-
-	// 마우스 좌표가 버튼 영역 안에 들어왔는지 확인 (AABB 충돌 체크)
-	if (mouseX >= UI_X && mouseX <= UI_X + BUTTON_WIDTH && mouseY == UI_Y)
-	{
-		isHovered = true;
-	}
-	else
-	{
-		isHovered = false;
-	}
+	// 범위 체크
+	return (mouseX >= UI_X && mouseX <= UI_X + BUTTON_WIDTH && mouseY == UI_Y);
 }

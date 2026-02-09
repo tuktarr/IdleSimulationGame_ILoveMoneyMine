@@ -96,14 +96,9 @@ void GameLevel::HandleInput()
     // 마우스 좌표 가져오기
     Vector2 mousePos = Input::Get().GetMousePosition();
 
-    if (adManager)
-    {
-        adManager->CheckHover((int)mousePos.x, (int)mousePos.y);
-    }
-
     if (Input::Get().GetButtonDown(VK_LBUTTON))
     {
-        // 광고창 클릭처리 함수
+        // 광고창 클릭시, 상태변경/처리
         if (adManager && adManager->HandleClick((int)mousePos.x, (int)mousePos.y))
         {
             return;
