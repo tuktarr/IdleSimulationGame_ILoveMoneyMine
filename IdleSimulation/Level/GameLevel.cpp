@@ -361,6 +361,14 @@ void GameLevel::LoadAndCalcOfflineReward()
     // 두 시간의 차이를 계산 초(double)단위로 반환
     double secondsPassed = difftime(now, lastTime);
 
+    const double MAX_OFFLINE_SECONDS = 6.0 * 3600.0; // 21600초(6시간)
+
+    // 6시간으로 제한하기
+    if (secondsPassed > MAX_OFFLINE_SECONDS)
+    {
+        secondsPassed = MAX_OFFLINE_SECONDS;
+    }
+
     if (secondsPassed > 0)
     {
         long long totalOfflineIncome = 0;
@@ -369,13 +377,13 @@ void GameLevel::LoadAndCalcOfflineReward()
 
         for (Mine* mine : mines)
         {
-            float speed = mine->GetTimer().GetTargetTime();
+            float speed = mine->GetTimer().GetTargetTime() * 32;
             long long income = mine->GetIncome();
             
             if (speed > 0.0f)
             {
-                long long count = (long long)(secondsPassed / speed);
-                totalOfflineIncome += (count * income) / 10;
+                long long count = (long long)(income / speed);
+                totalOfflineIncome += (long long)(count * secondsPassed) / 50;
             }
         }
 

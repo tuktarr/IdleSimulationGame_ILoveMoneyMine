@@ -8,11 +8,11 @@ const int MINE_HEIGHT = 5;
 
 // static 멤버 변수 초기화 (클래스 밖에서)
 const Mine::MineData Mine::mineInfos[] = {
-    { EMineType::Copper, "구리", Color::Brown, 30000, 100, 20, 0.1f},
-    { EMineType::Silver, "은",  Color::Gray, 50, 250, 50, 0.3f},
-    { EMineType::Gold, "금",  Color::Yellow, 200, 600, 500, 0.6f},
-    { EMineType::Platinum, "백금", Color::White, 800, 10000, 1000, 1.1f},
-    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000, 2.0f},
+    { EMineType::Copper, "구리", Color::Brown, 150, 100, 20, 0.1f},
+    { EMineType::Silver, "은",  Color::Gray, 300, 300, 50, 0.3f},
+    { EMineType::Gold, "금",  Color::Yellow, 500, 1200, 500, 0.6f},
+    { EMineType::Platinum, "백금", Color::White, 1500, 10000, 1000, 1.1f},
+    { EMineType::Diamond, "다이아", Color::Cyan, 7000, 30000, 2000, 2.0f},
     { EMineType::Trophy, "전설의 트로피", Color::White, 0, 100000000, 0, 5.0f}
 };
 
