@@ -35,4 +35,7 @@ private:
 	// GameLevel의 모든 로그 담을 객체
 	std::string currentLog = "준비 완료...";
 	Timer logTimer;
+
+	// 게임 종료 조건 플래그
+	bool isGameClear = false;
 };

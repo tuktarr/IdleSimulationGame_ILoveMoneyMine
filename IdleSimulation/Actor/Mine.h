@@ -22,6 +22,7 @@ public:
         Gold,
         Platinum,
         Diamond,
+        Trophy, // 사면 승리하는 광산
         MaxCount // 반복문 돌릴 때 유용함
     };
 

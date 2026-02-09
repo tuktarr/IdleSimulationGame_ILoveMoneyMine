@@ -12,7 +12,8 @@ const Mine::MineData Mine::mineInfos[] = {
     { EMineType::Silver, "은",  Color::Gray, 50, 250, 50, 0.3f},
     { EMineType::Gold, "금",  Color::Yellow, 200, 600, 500, 0.6f},
     { EMineType::Platinum, "백금", Color::White, 800, 10000, 1000, 1.1f},
-    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000, 2.0f}
+    { EMineType::Diamond, "다이아", Color::Cyan, 1500, 30000, 2000, 2.0f},
+    { EMineType::Trophy, "전설의 트로피", Color::White, 0, 100000000, 0, 5.0f}
 };
 
 Mine::Mine(EMineType Minetype, Vector2 position)
@@ -41,7 +42,7 @@ Mine::Mine(EMineType Minetype, Vector2 position)
     {
         // None 타입이거나 잘못된 타입일 때
         mineData = nullptr;
-        image = const_cast<char*>(" "); // 또는 [ ] 
+        image = const_cast<char*>(" ");
         currentLevel = 0;
         currentIncome = 0;
         currentUpgradePrice = 0;
@@ -122,6 +123,11 @@ void Mine::Draw()
         {
             symbol = ".";
             drawColor = Color::Yellow;
+            if (mineType == EMineType::Trophy)
+            {
+                symbol = "=";
+                drawColor = Color::White;
+            }
         }
         else
         {
@@ -151,6 +157,11 @@ void Mine::Draw()
         std::string lvStr = "Lv." + std::to_string(currentLevel);
         renderer.Submit(lvStr, position + Vector2(-2, -1), Color::White, 2);
     }
+    else if (mineType == EMineType::Trophy)
+    {
+        renderer.Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
+        renderer.Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
+    }
     else
     {
         renderer.Submit("?", position, Color::Yellow, -1);
@@ -179,8 +190,11 @@ void Mine::Draw()
     else
     {
         // 구매 후: 다음 업그레이드 비용 표시 (흰색)
-        std::string upgrade = "UP: " + std::to_string(GetUpgradePrice()) + "G";
-        Renderer::Get().Submit(upgrade, position + Vector2(-3, 3), Color::White, 6);
+        if (mineType != EMineType::Trophy)
+        {
+            std::string upgrade = "UP: " + std::to_string(GetUpgradePrice()) + "G";
+            Renderer::Get().Submit(upgrade, position + Vector2(-3, 3), Color::White, 6);
+        }
     }
 }
 

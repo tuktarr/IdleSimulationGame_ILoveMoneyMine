@@ -32,7 +32,10 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
-    Level::Tick(deltaTime);
+    if (!isGameClear)
+    {
+        Level::Tick(deltaTime);
+    }
 
     // 입력 후, 데이터 계속 업데이트
     HandleInput();
@@ -55,6 +58,16 @@ void GameLevel::Tick(float deltaTime)
 
 void GameLevel::HandleInput()
 {
+    if (isGameClear)
+    {
+        if (Input::Get().GetButtonDown(VK_ESCAPE))
+        {
+            Engine::Get().QuitEngine();
+        }
+        return;
+    }
+
+    // 임시로 디버그 시, 사용할 esc 강제종료
     if (Input::Get().GetButtonDown(VK_ESCAPE))
     {
         Engine::Get().QuitEngine();
@@ -87,7 +100,15 @@ void GameLevel::HandleInput()
                         mine->Purchase();
                         player->AddMineList(mine);
                         // 로그
-                        SetLog(data.name + "구입 성공!");
+                        if (mine->GetMinetype() == Mine::EMineType::Trophy)
+                        {
+                            isGameClear = true;
+                            SetLog("축하합니다. 전설의 광산을 획득하였습니다.!!!");
+                        }
+                        else
+                        {
+                            SetLog(data.name + "구입 성공!");
+                        }
                     }
                     else
                     {
@@ -135,7 +156,7 @@ void GameLevel::RenderUI()
     // 보유 광산 목록 및 레벨 표시
 
     int mineInfoNum = 75;
-    Renderer::Get().Submit("-- 보유 광산 목록 --", Vector2(mineInfoNum, 1), Color::Cyan, 10);
+    Renderer::Get().Submit("--- 보유 광산 목록 (이름 , 레벨 , 속도 ) ---", Vector2(mineInfoNum, 1), Color::Cyan, 10);
 
     const std::vector<Mine*>& ownedMines = player->GetOwnedMines(); // Player 클래스에 getter가 있다고 가정
 
@@ -150,13 +171,27 @@ void GameLevel::RenderUI()
             Mine* mine = ownedMines[i];
             const Mine::MineData& data = mine->GetData();
 
-            std::string speed = std::to_string(mine->GetTimer().GetTargetTime());
+            if (mine->GetMinetype() == Mine::EMineType::Trophy)
+            {
+                continue;
+            }
+
+            // 한 바퀴를 몇 초에 도는지를 스피드로 나타냄
+            std::string speed = std::to_string(mine->GetTimer().GetTargetTime() * 32);
             speed = speed.substr(0, speed.find('.') + 3);
-            std::string mineInfo = "- " + data.name + " (Lv." + std::to_string(mine->GetLevel()) + ")" + " [" + speed + "s]";
+            std::string mineInfo = "- " + data.name + " (Lv." + std::to_string(mine->GetLevel()) + ")" + " [" + " 바퀴 / " + speed + "초]";
             
             // i값을 이용해 세로로 나열
             Renderer::Get().Submit(mineInfo, Vector2(mineInfoNum, 2 + i), Color::Green, 10);
         }
+    }
+
+    if (isGameClear)
+    {
+        // 화면 중앙 쯤에 승리 메시지 출력
+        Renderer::Get().Submit("★ CONGRATULATIONS! ★", Vector2(65, 14), Color::Yellow, 20);
+        Renderer::Get().Submit("100억을 모아 전설의 광산을 획득했습니다!", Vector2(55, 16), Color::White, 20);
+        Renderer::Get().Submit("Press ESC to Quit", Vector2(65, 18), Color::Gray, 20);
     }
 }
 
@@ -173,16 +208,18 @@ void GameLevel::InitializeMines()
         int col = i % 3;
 
         Vector2 pos(static_cast<float>(START_X + col * GAP_X), static_cast<float>(START_Y + row * GAP_Y));
-        Mine::EMineType potentialType = (i < (int)Mine::EMineType::MaxCount) ? static_cast<Mine::EMineType>(i + 1) : Mine::EMineType::None;
+        Mine::EMineType potentialType;
+
+        if (i == 8)
+        {
+            potentialType = Mine::EMineType::Trophy;
+        }
+        else
+        {
+            potentialType = (i < (int)Mine::EMineType::Trophy - 1) ? static_cast<Mine::EMineType>(i + 1) : Mine::EMineType::None;
+        }
 
         Mine* slot = new Mine(potentialType, pos);
-
-        //// 구리(첫번째)만 구매된 상태로 시작
-        //if (potentialType == Mine::EMineType::Copper)
-        //{
-        //    slot->Purchase();
-        //    player->AddMineList(slot);
-        //}
 
         // 콜백 연결
         slot->SetOnCycleComplete([this](long long income) {
@@ -284,9 +321,7 @@ void GameLevel::LoadAndCalcOfflineReward()
     player->SetGold(savedGold);
     
 
-    // TODO 작업 : 현재 Load 할 때, actors가 비어있어서 for문을 지나쳐버려 맨 처음의 초기화 구문이 실행이됨
-    // actors를 mine으로 형변환하지말고 Mine을 따로 배열을 만들어서 관리하도록 로직 구성
-    // 그러면 Load시에 mine 배열을 보고 상황이 어떤지를 확인할 수 있다.
+    // actors에 광산이 있다면 Type을 가져와서 구매되었는지와 level이 얼마인지를 들고옴
     for (Actor* actor : actors)
     {
         Mine* mine = actor->As<Mine>();
