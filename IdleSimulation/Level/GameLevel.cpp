@@ -6,12 +6,15 @@
 #include <windows.h>
 #include "Render/Renderer.h"
 #include "Util/Util.h"
+#include "MenuLevel.h"
 
-GameLevel::GameLevel()
+GameLevel::GameLevel(bool bShouldLoad)
 {
     // 이벤트 매니저 생성 및 등록
     eventManager = new EventManager(); 
     AddNewActor(eventManager);
+
+    // 이벤트 구독 (로그 및 광고 버튼 제어)
     eventManager->Subscribe([this](EventManager::EEventType type) 
         {
             bool isEventActive = (type != EventManager::EEventType::NONE);
@@ -62,9 +65,32 @@ GameLevel::GameLevel()
     // 임시 배열에 넣은 플레이어, 광산을 level에서 관리하는 actors에 넣어줌
     ProcessAddAndDestroyActors();
 
-    // 게임 시작 시 데이터 로드 및 오프라인 수익 계산
-    LoadAndCalcOfflineReward();
+    // 모드에 따른 데이터 처리 (새 게임 / 불러오기)
+    if (bShouldLoad)
+    {
+        // 게임 시작 시 데이터 로드 및 오프라인 수익 계산
+        LoadAndCalcOfflineReward();
+    }
+    else
+    {
+        // 새 게임 모드: 초기화 및 첫 광산 자동 구매
+        player->SetGold(0);
+        SetLog("새로운 광산 경영을 시작합니다!");
 
+        // 첫 번째 구리 광산을 자동으로 구매한 상태로 시작하게 함
+        for (Actor* actor : actors)
+        {
+            Mine* mine = actor->As<Mine>();
+            if (mine && mine->GetMinetype() == Mine::EMineType::Copper)
+            {
+                mine->Purchase();
+                player->AddMineList(mine);
+                break;
+            }
+        }
+        // 새 게임 시작하자마자 일단 저장 (파일 생성)
+        SaveGame();
+    }
     // 로그 타이머 설정
     logTimer.SetTargetTime(3.0f);
 }
@@ -76,14 +102,12 @@ GameLevel::~GameLevel()
 
 void GameLevel::Tick(float deltaTime)
 {
-
-    if (helpManager)
-    {
-        helpManager->Tick(deltaTime);
-    }
+    // 입력 후, 데이터 계속 업데이트
+    HandleInput();
 
     if (helpManager && helpManager->IsOpen())
     {
+        helpManager->Tick(deltaTime);
         return;
     }
 
@@ -92,15 +116,15 @@ void GameLevel::Tick(float deltaTime)
         // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
         // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
         adManager->Tick(deltaTime);
+        return;
     }
-    else if(!isGameClear)
+
+    if(!isGameClear)
     {
         // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
-        Level::Tick(deltaTime);
-            
+        Level::Tick(deltaTime);        
     }
-    // 입력 후, 데이터 계속 업데이트
-    HandleInput();
+
 
     if (!currentLog.empty())
     {
@@ -139,18 +163,37 @@ void GameLevel::Draw()
 
 void GameLevel::HandleInput()
 {
+    if (helpManager && helpManager->IsOpen())
+    {
+        // H 키나 ESC를 누르면 도움말 닫기
+        if (Input::Get().GetButtonDown('H') || Input::Get().GetButtonDown(VK_ESCAPE))
+        {
+            helpManager->Close();
+        }
+        return; // 도움말이 열려 있으면 아래의 모든 게임 로직을 무시함
+    }
+
     if (isGameClear)
     {
-        if (Input::Get().GetButtonDown(VK_ESCAPE))
+        if (Input::Get().GetButtonDown(VK_ESCAPE) || Input::Get().GetButtonDown('X'))
         {
+            SaveGame(); // 클리어 상태에서도 저장 후 종료
             Engine::Get().QuitEngine();
         }
         return;
     }
 
-    // 임시로 디버그 시, 사용할 esc 강제종료
-    if (Input::Get().GetButtonDown(VK_ESCAPE))
+    // 시스템 단축키 처리 (H : 도움말 , X : 저장 후 종료)
+    if (Input::Get().GetButtonDown('H'))
     {
+        helpManager->Open();
+        return;
+    }
+    
+    if (Input::Get().GetButtonDown('X'))
+    {
+        SetLog("데이터를 저장하고 종료합니다...");
+        SaveGame();
         Engine::Get().QuitEngine();
         return;
     }
@@ -166,10 +209,10 @@ void GameLevel::HandleInput()
             }
             else if (eventManager->GetCurrentEvent() == EventManager::EEventType::GOLD_RUSH)
             {
-                SetLog("골드러쉬 중에는 채굴에 집중해야 합니다!");
+                SetLog("골드러쉬 중에는 집중해야 합니다!");
             }
         }
-        return; // 이벤트 중이면 아래의 클릭 판정 로직을 실행하지 않고 리턴
+        return;
     }
 
     // 마우스 좌표 가져오기
@@ -177,6 +220,21 @@ void GameLevel::HandleInput()
 
     if (Input::Get().GetButtonDown(VK_LBUTTON))
     {
+        if (mousePos.x >= 100 && mousePos.x <= 110)
+        {
+            if (mousePos.y == 25) // Help 영역
+            {
+                helpManager->Open();
+                return;
+            }
+            if (mousePos.y == 27) // EXIT 영역
+            {
+                SaveGame();
+                Engine::Get().QuitEngine();
+                return;
+            }
+        }
+
         // 광고창 클릭시, 상태변경/처리
         if (adManager && adManager->HandleClick((int)mousePos.x, (int)mousePos.y))
         {
@@ -295,6 +353,23 @@ void GameLevel::RenderUI()
             Renderer::Get().Submit(mineInfo, Vector2(mineInfoNum, 2 + i), Color::Green, 10);
         }
     }
+    Vector2 HelpButton = Vector2(100, 25);
+    Vector2 QuitButton = Vector2(100, 27);
+    
+    // 도움말 버튼 (우측 하단 구석)
+    Renderer::Get().Submit("[ HELP (H) ]", HelpButton, Color::Cyan, 15);
+    Renderer::Get().Submit("[ Quit (X) ]", QuitButton, Color::Cyan, 16);
+    
+    // 마우스가 버튼 위에 있다면 하이라이트 효과
+    Vector2 mPos = Input::Get().GetMousePosition();
+    if (mPos.x >= 100 && mPos.x <= 110 && mPos.y == HelpButton.y)
+    {
+        Renderer::Get().Submit("[ HELP (H) ]", HelpButton, Color::White, 16);
+    }
+    if (mPos.x >= 100 && mPos.x <= 110 && mPos.y == QuitButton.y)
+    {
+        Renderer::Get().Submit("[ Quit (X) ]", QuitButton, Color::White, 17);
+    }
 
     if (isGameClear)
     {
@@ -398,26 +473,11 @@ void GameLevel::LoadAndCalcOfflineReward()
     FILE* file = nullptr;
     errno_t err = fopen_s(&file, "../Config/SaveData.txt", "rt");
 
-    // 저장된 파일이 없으면 새로 시작
+    // 저장된 파일이 없으면 함수 종료
     if (err != 0 || file == nullptr)
     {
-        SetLog("새로운 게임을 시작합니다.");
-
-        player->AddGold(0);
-
-        for (Actor* actor : actors)
-        {
-            Mine* mine = actor->As<Mine>();
-            if (mine && mine->GetMinetype() == Mine::EMineType::Copper)
-            {
-                mine->Purchase();
-                player->AddMineList(mine);
-                break;
-            }
-        }
-        // wt모드로 파일 없으면 바로 생성
-        SaveGame();
-        return; // 함수 종료
+        SetLog("불러올 저장 데이터가 없습니다.");
+        return;
     }
 
     long long savedGold = 0;

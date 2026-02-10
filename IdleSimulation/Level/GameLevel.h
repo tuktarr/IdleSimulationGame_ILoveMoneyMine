@@ -19,7 +19,7 @@ class GameLevel : public Level
 	RTTI_DECLARATIONS(GameLevel, Level)
 
 public:
-	GameLevel();
+	GameLevel(bool bShouldLoad);
 	~GameLevel();
 
 private:

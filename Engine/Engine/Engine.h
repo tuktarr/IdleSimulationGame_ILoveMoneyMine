@@ -81,6 +81,12 @@ namespace Wanted
 		// 메인 레벨.
 		class Level* mainLevel = nullptr;
 
+		// 다음 프레임에 교체될 예약 레벨
+		class Level* pendingLevel = nullptr;
+
+		// 실제 레벨 교체를 안전하게 처리하는 함수
+		void ProcessLevelChange();
+
 		// 전역 변수.
 		static Engine* instance;
 	};

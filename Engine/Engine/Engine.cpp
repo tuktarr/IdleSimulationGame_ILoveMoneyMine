@@ -102,7 +102,8 @@ namespace Wanted
 
 				// 이전 시간 값 갱신.
 				previousTime = currentTime;
-
+				
+				ProcessLevelChange();
 
 				// 레벨에 요청된 추가/제거 처리
 				if (mainLevel)
@@ -117,10 +118,6 @@ namespace Wanted
 
 	}
 
-	// TODO : 엔진이 꺼질 때, Util::SaveCurrentTime()을 호출해서 현재 시간을 파일에 쓴다.
-	// Engine::LoadSetting(): 설정 파일을 읽을 때, 저장된 시간도 함께 읽는다.
-	// GameLevel::BeginPlay(): 저장된 시간과 함께 시간의 차이를 계산해서 CalculatOfflineIncome() 을 실행한다. 최대 오프라인 인정시간을 둔다(8시간)
-
 	void Engine::QuitEngine()
 	{
 		isQuit = true;
@@ -128,17 +125,14 @@ namespace Wanted
 
 	void Engine::SetNewLevel(Level* newLevel)
 	{
-		// 기존 레벨 있는지 확인.
-		// 있으면 기존 레벨 제거.
-		// Todo: 임시 코드. 레벨 전환할 때는 바로 제거하면 안됨.
-		if (mainLevel)
+		// 즉시 지우지 않고 예약만 함
+		if (pendingLevel)
 		{
-			delete mainLevel;
-			mainLevel = nullptr;
+			// 만약 한 프레임 내에 여러 번 교체 요청이 들어오면
+			// 마지막에 들어온 것만 남기고 이전 예약은 메모리 해제
+			delete pendingLevel;
 		}
-
-		// 레벨 설정.
-		mainLevel = newLevel;
+		pendingLevel = newLevel;
 	}
 
 	Engine& Engine::Get()
@@ -261,5 +255,30 @@ namespace Wanted
 
 		// 2. 렌더러에 그리기 명령 전달
 		renderer->Draw();
+	}
+	void Engine::ProcessLevelChange()
+	{
+		// 예약된 레벨이 없으면 통과
+		if (pendingLevel == nullptr)
+		{
+			return;
+		}
+
+		// 기존 레벨 안전하게 제거
+		if (mainLevel)
+		{
+			delete mainLevel;
+			mainLevel = nullptr;
+		}
+
+		// 예약된 레벨을 메인으로 설정
+		mainLevel = pendingLevel;
+		pendingLevel = nullptr;
+
+		// 새 레벨이 설정되었다면 초기화 이벤트 호출
+		if (mainLevel)
+		{
+			mainLevel->BeginPlay();
+		}
 	}
 }

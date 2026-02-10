@@ -17,6 +17,9 @@ public:
 	void ToggleHelp() { isVisible = !isVisible; }
 	bool IsOpen() const { return isVisible; }
 
+	// 명시적 제어함수
+	void Open() { isVisible = true; }
+	void Close() { isVisible = false; }
 private:
 	bool isVisible = false;
 
