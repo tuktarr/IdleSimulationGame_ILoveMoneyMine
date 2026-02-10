@@ -3,8 +3,10 @@
 #include <string>
 #include "Math/Color.h"
 #include "Util/Timer.h"
+#include "Actor/EventManager.h"
 #include <vector>
 #include <functional>
+
 
 using namespace Wanted;
 
@@ -40,7 +42,7 @@ public:
     static const MineData mineInfos[(int)EMineType::MaxCount];
 
 public:
-    Mine(EMineType type, Vector2 position);
+    Mine(EMineType type, Vector2 position, EventManager* eventManager = nullptr);
 	~Mine();
     const MineData& GetData() const { return *mineData; }
 
@@ -78,8 +80,9 @@ private:
     EMineType mineType;
     const MineData* mineData;
 
-    // 현재 타이머 
-    float currentTimer = 0.0f;
+    // 이벤트 상태 관리를 위한 변수
+    float eventSpeedMultiplier = 1.0f; // 노다지 시 속도 배율 (기본 1.0)
+    bool isPausedByEvent = false;      // 지진 시 일시정지 여부
 
     // == 광산의 가변 데이터 ==
 

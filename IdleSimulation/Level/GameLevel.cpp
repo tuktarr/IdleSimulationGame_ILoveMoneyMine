@@ -9,6 +9,10 @@
 
 GameLevel::GameLevel()
 {
+    // 이벤트 매니저 생성 및 등록
+    eventManager = new EventManager(); 
+    AddNewActor(eventManager);
+
     // 어처피 위치정보를 가질 필요가 없으므로 그냥 생성자로 생성
     player = new Player();
     AddNewActor(player);
@@ -56,32 +60,37 @@ void GameLevel::Tick(float deltaTime)
         return;
     }
  
-        if(adManager&& adManager->IsPlayingAd())
-        {
-            // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
-            // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
-            adManager->Tick(deltaTime);
-        }
-        else if(!isGameClear)
-        {
-            // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
-            Level::Tick(deltaTime);
+    if (eventManager)
+    {
+        eventManager->Tick(deltaTime);
+    }
+
+    if(adManager&& adManager->IsPlayingAd())
+    {
+        // Level::Tick()을 호출하지 않음 -> 광산들의 타이머가 멈춤 (채굴 중단)
+        // 대신, 광고 시간은 흘러야 하므로 adManager만 따로 업데이트
+        adManager->Tick(deltaTime);
+    }
+    else if(!isGameClear)
+    {
+        // 게임 클리어 상태가 아니라면 모든 액터(광산 + AdManager 포함) 정상 업데이트
+        Level::Tick(deltaTime);
             
-        }
-        // 입력 후, 데이터 계속 업데이트
-        HandleInput();
+    }
+    // 입력 후, 데이터 계속 업데이트
+    HandleInput();
 
-        if (!currentLog.empty())
+    if (!currentLog.empty())
+    {
+        logTimer.Tick(deltaTime);
+
+        // 시간 되면 로그 삭제
+        if (logTimer.IsTimeOut())
         {
-            logTimer.Tick(deltaTime);
-
-            // 시간 되면 로그 삭제
-            if (logTimer.IsTimeOut())
-            {
-                currentLog = ""; // 문자열 비우기
-                logTimer.Reset();
-            }
+            currentLog = ""; // 문자열 비우기
+            logTimer.Reset();
         }
+    }
   
 }
 
@@ -94,7 +103,13 @@ void GameLevel::Draw()
     else
     {
         Level::Draw();
-        // 로그 정보
+
+        // 이벤트 UI 출력
+        if (eventManager)
+        {
+            eventManager->Draw();
+        }
+        // 실시간 로그 정보
         RenderUI();
     }
 
@@ -275,7 +290,7 @@ void GameLevel::InitializeMines()
             potentialType = (i < (int)Mine::EMineType::Trophy - 1) ? static_cast<Mine::EMineType>(i + 1) : Mine::EMineType::None;
         }
 
-        Mine* slot = new Mine(potentialType, pos);
+        Mine* slot = new Mine(potentialType, pos, this->eventManager);
 
         // 콜백 연결
         slot->SetOnCycleComplete([this](long long income) {

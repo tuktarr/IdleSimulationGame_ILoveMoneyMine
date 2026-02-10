@@ -4,6 +4,7 @@
 #include "Util/Timer.h"
 #include "Actor/AdManager.h"
 #include "Actor/HelpManager.h"
+#include "Actor/EventManager.h"
 #include <string>
 
 #include <stdio.h>
@@ -55,4 +56,7 @@ private:
 
 	// 도움말 매니저 추가
 	HelpManager* helpManager = nullptr;
+
+	// 이벤트 매니저 추가
+	EventManager* eventManager = nullptr;
 };

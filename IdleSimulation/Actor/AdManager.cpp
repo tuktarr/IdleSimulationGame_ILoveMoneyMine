@@ -22,6 +22,8 @@ void AdManager::Init(OnAdFinishedFunc callback)
 
 void AdManager::Tick(float deltaTime)
 {
+	super::Tick(deltaTime);
+
 	adStateTimer.Tick(deltaTime);
 
 	// Timer의 시간 변화에 따른 상태변환
@@ -51,6 +53,8 @@ void AdManager::Tick(float deltaTime)
 
 void AdManager::Draw()
 {
+	super::Draw();
+
 	const int UI_SORT_ORDER = 100;
 	Vector2 mousePos = Input::Get().GetMousePosition();
 	bool isHovered = IsMouseOver((int)mousePos.x, (int)mousePos.y);

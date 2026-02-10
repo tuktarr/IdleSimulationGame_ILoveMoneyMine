@@ -9,6 +9,7 @@ HelpManager::HelpManager() : super()
 
 void HelpManager::Tick(float deltaTime)
 {
+    super::Tick(deltaTime);
     // H키나 ESC를 누르면 도움말 창 토글
     if (Input::Get().GetButtonDown('H'))
     {
@@ -18,6 +19,7 @@ void HelpManager::Tick(float deltaTime)
 
 void HelpManager::Draw()
 {
+    super::Draw();
     if (!isVisible)
     {
         return;

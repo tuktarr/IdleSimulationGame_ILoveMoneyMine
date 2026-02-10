@@ -16,21 +16,21 @@ const Mine::MineData Mine::mineInfos[] = {
     { EMineType::Trophy, "전설의 트로피", Color::White, 0, 100000000, 0, 5.0f}
 };
 
-Mine::Mine(EMineType Minetype, Vector2 position)
+Mine::Mine(EMineType Minetype, Vector2 position, EventManager* eventManager)
     : super("", position, Color::White),
     mineType(Minetype),
     isPurchased(false),
     fillTimer(0.0f),
     blinkTimer(0.3f)
 {
-    // None(0)보다 크고 MaxCount(6)보다 작을 때만 데이터 접근
+    // None(0)보다 크고 MaxCount(end)보다 작을 때만 데이터 접근
     if (Minetype > EMineType::None && Minetype < EMineType::MaxCount)
     {
         // mineInfos[0]에 접근하기 위해 -1 해줌
         int index = (int)Minetype - 1;
         mineData = &mineInfos[index];
 
-        // Timer에 목표 시간 설정
+        // 채굴Timer에 목표 시간 설정
         fillTimer.SetTargetTime(mineData->defaultFillSpeed);
 
         image = const_cast<char*>(mineData->name.c_str());
@@ -49,6 +49,34 @@ Mine::Mine(EMineType Minetype, Vector2 position)
         currentUpgradePrice = 0;
     }
 
+
+    if (eventManager != nullptr)
+    {
+        eventManager->Subscribe([this](EventManager::EEventType type)
+            {
+                switch (type)
+                {
+                case EventManager::EEventType::NONE:
+                {
+                    isPausedByEvent = false;
+                    eventSpeedMultiplier = 1.0f;
+                    break;
+                }
+                case EventManager::EEventType::EARTHQUAKE:
+                {
+                    isPausedByEvent = true;
+                    break;
+                }
+                case EventManager::EEventType::GOLD_RUSH:
+                {
+                    isPausedByEvent = false;
+                    eventSpeedMultiplier = 3.0f;
+                    break;
+                }
+
+                }
+            });
+    }
     GeneratePath();
 }
 
@@ -77,6 +105,8 @@ bool Mine::IsSelected(const Vector2& mousePos) const
 
 void Mine::Tick(float deltaTime)
 {
+    super::Tick(deltaTime);
+
     if (mineType == EMineType::Trophy && !isPurchased)
     {
         blinkTimer.Tick(deltaTime);
@@ -88,12 +118,13 @@ void Mine::Tick(float deltaTime)
         }
     }
 
-    if (!isPurchased || borderPath.empty())
+    if (!isPurchased || borderPath.empty() || isPausedByEvent)
     {
         return;
     }
-
-    fillTimer.Tick(deltaTime);
+    
+    // deltaTime에 eventSpeedMultiplier 곱해줌
+    fillTimer.Tick(deltaTime * eventSpeedMultiplier);
 
     // 일정 시간마다 게이지 한 칸 채움
     if (fillTimer.IsTimeOut())
