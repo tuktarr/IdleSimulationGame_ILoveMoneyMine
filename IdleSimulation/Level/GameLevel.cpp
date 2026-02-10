@@ -12,6 +12,33 @@ GameLevel::GameLevel()
     // 이벤트 매니저 생성 및 등록
     eventManager = new EventManager(); 
     AddNewActor(eventManager);
+    eventManager->Subscribe([this](EventManager::EEventType type) 
+        {
+            bool isEventActive = (type != EventManager::EEventType::NONE);
+            if (this->adManager)
+            {
+                this->adManager->SetDisabledByEvent(isEventActive);
+            }
+
+            switch (type)
+            {
+                case EventManager::EEventType::EARTHQUAKE:
+                {    // 지진 발생 시 로그
+                    SetLog("!!! 지진 발생 !!! 모든 광산이 가동을 멈춥니다!");
+                    break;
+                }
+                case EventManager::EEventType::GOLD_RUSH:
+                {   // 골드러쉬 발생 시 로그
+                    SetLog("$$$ 골드러쉬 $$$ 채굴 속도가 3배 증가합니다!");
+                    break;
+                }
+                case EventManager::EEventType::NONE:
+                {   // 상황 종료
+                    SetLog("상황 종료. 다시 평화가 찾아왔습니다.");
+                    break;
+                }
+            }
+        });
 
     // 어처피 위치정보를 가질 필요가 없으므로 그냥 생성자로 생성
     player = new Player();
@@ -58,11 +85,6 @@ void GameLevel::Tick(float deltaTime)
     if (helpManager && helpManager->IsOpen())
     {
         return;
-    }
- 
-    if (eventManager)
-    {
-        eventManager->Tick(deltaTime);
     }
 
     if(adManager&& adManager->IsPlayingAd())
@@ -131,6 +153,23 @@ void GameLevel::HandleInput()
     {
         Engine::Get().QuitEngine();
         return;
+    }
+
+    if (eventManager && eventManager->GetCurrentEvent() != EventManager::EEventType::NONE)
+    {
+        // 클릭을 시도했을 때, 로그를 남겨 유저에게 알림을 줍니다.
+        if (Input::Get().GetButtonDown(VK_LBUTTON))
+        {
+            if (eventManager->GetCurrentEvent() == EventManager::EEventType::EARTHQUAKE)
+            {
+                SetLog("지진 때문에 정신이 없어 클릭할 수 없습니다!");
+            }
+            else if (eventManager->GetCurrentEvent() == EventManager::EEventType::GOLD_RUSH)
+            {
+                SetLog("골드러쉬 중에는 채굴에 집중해야 합니다!");
+            }
+        }
+        return; // 이벤트 중이면 아래의 클릭 판정 로직을 실행하지 않고 리턴
     }
 
     // 마우스 좌표 가져오기

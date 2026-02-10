@@ -195,10 +195,13 @@ namespace Wanted
 		Color color,
 		int sortingOrder)
 	{
+		// 최종 pos에 shakeOffset 추가
+		Vector2 finalPos = position + shakeOffset;
+
 		// 렌더 데이터 생성 후 큐에 추가
 		RenderCommand command = {};
 		command.text = text;
-		command.position = position;
+		command.position = finalPos;
 		command.color = color;
 		command.sortingOrder = sortingOrder;
 

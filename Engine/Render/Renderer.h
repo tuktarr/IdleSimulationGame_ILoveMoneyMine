@@ -66,6 +66,9 @@ namespace Wanted
 		// 싱글톤 접근 함수
 		static Renderer& Get();
 
+		// shakeoffset 지정함수
+		void SetShakeOffset(const Vector2& offset) { shakeOffset = offset; }
+
 		// 화면 지우는 함수
 		void Clear();
 	
@@ -95,5 +98,8 @@ namespace Wanted
 
 		// 싱글톤 구현을 위한 정적 변수
 		static Renderer* instance;
+
+		// 화면 흔들림 오프셋
+		Vector2 shakeOffset = Vector2::Zero;
 	};
 }

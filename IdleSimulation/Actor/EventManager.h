@@ -10,6 +10,7 @@ class EventManager : public Actor
 {
 	RTTI_DECLARATIONS(EventManager,Actor)
 	
+public:
 	enum class EEventType
 	{
 		NONE,
@@ -18,7 +19,6 @@ class EventManager : public Actor
 		MAX_COUNT
 	};
 
-public:
 	EventManager();
 
 	// 이벤트를 수신할 델리게이트 타입 정의

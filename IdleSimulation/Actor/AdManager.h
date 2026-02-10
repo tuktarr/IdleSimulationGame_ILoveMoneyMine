@@ -34,8 +34,13 @@ public:
 
 	// 현재 광고 재생 중인지 확인 (입력 차단용)
 	bool IsPlayingAd() const { return currentState == EAdState::PLAYING; }
+	
+	void SetDisabledByEvent(bool bDisabled) { bDisabledByEvent = bDisabled;}
 
 private:
+	// 광고버튼 이벤트로 인한 비활성화 상태 플래그
+	bool bDisabledByEvent = false;
+
 	static const int UI_X = 70;
 	static const int UI_Y = 20;
 	static const int BUTTON_WIDTH = 10; // 버튼 크기

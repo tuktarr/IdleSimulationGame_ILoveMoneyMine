@@ -152,6 +152,8 @@ void Mine::Draw()
     int halfW = MINE_WIDTH / 2;
     int halfH = MINE_HEIGHT / 2;
 
+    Color eventBlinkColor = isBlinkWhite ? Color::Yellow : Color::White;
+
     // 테두리 그리기
     for (int i = 0; i < borderPath.size(); ++i)
     {
@@ -159,7 +161,7 @@ void Mine::Draw()
 
         const char* symbol = "*";
         Color drawColor = Color::DarkGray;
-
+        
         if (!isPurchased)
         {
             symbol = ".";
@@ -172,17 +174,22 @@ void Mine::Draw()
         }
         else
         {
-            if (i < filledCount)
+            (i < filledCount) ? symbol = "o" : symbol = "*";
+        
+            if (isPausedByEvent)
             {
-                symbol = "o";
-                drawColor = Color::Green;
+                drawColor = Color::Red;
+            }
+            else if (eventSpeedMultiplier > 1.0f)
+            {
+                drawColor = (i < filledCount) ? Color::Yellow : eventBlinkColor;
             }
             else
             {
-                symbol = "*";
-                drawColor = Color::DarkGray;
-            }
+                drawColor = (i < filledCount) ? Color::Green : Color::DarkGray;
+            }   
         }
+
         Renderer::Get().Submit(symbol, drawPos, drawColor, 0);
     }
     if (mineType == EMineType::None || mineType == EMineType::MaxCount)
@@ -192,7 +199,17 @@ void Mine::Draw()
     else if (isPurchased)
     {
         // 중심 심볼
-        Renderer::Get().Submit(image, position + Vector2(-1,0), mineData->colorCode, 1);
+        Color nameColor = mineData->colorCode;
+        if (isPausedByEvent)
+        {
+            nameColor = Color::Red;
+        }
+        else if (eventSpeedMultiplier > 1.0f)
+        {
+            nameColor = eventBlinkColor;
+        }
+
+        Renderer::Get().Submit(image, position + Vector2(-1,0), nameColor, 1);
 
         // 레벨 표시 (심볼 바로위)
         std::string lvStr = "Lv." + std::to_string(currentLevel);
@@ -201,10 +218,9 @@ void Mine::Draw()
     else if (mineType == EMineType::Trophy)
     {
         Color blinkColor = isBlinkWhite ? Color::White : Color::DarkRed;
-        //Renderer::Get().Submit("Press", position + Vector2(-2,0), Color::Blue, 1);
-        //Renderer::Get().Submit("Victory", position + Vector2(-3, 1), Color::Blue, 2);
+      
         Renderer::Get().Submit(" PRESS ", position + Vector2(-4, -1), Color::DarkBlue, 6);
-        Renderer::Get().Submit(" VICTOR ", position + Vector2(-4, 0), blinkColor, 7); // 여기에 적용!
+        Renderer::Get().Submit(" VICTORY ", position + Vector2(-4, 0), blinkColor, 7); // 여기에 적용!
     }
     else
     {

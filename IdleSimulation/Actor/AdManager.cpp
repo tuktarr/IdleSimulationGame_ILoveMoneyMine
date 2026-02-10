@@ -67,9 +67,11 @@ void AdManager::Draw()
 
 	case EAdState::READY:
 	{
-		// [광고 보기] 버튼
-		Color ReadybtnColor = isHovered ? Color::White : Color::Yellow;
-		Renderer::Get().Submit("[  AD  ]", Vector2(UI_X, UI_Y), ReadybtnColor, UI_SORT_ORDER);
+		// bDisabledByEvent가 true라면 버튼을 회색으로 그리고 [ BUSY ] 출력
+		Color btnColor = bDisabledByEvent ? Color::DarkGray : (isHovered ? Color::White : Color::Yellow);
+		std::string text = bDisabledByEvent ? "[ BUSY ]" : "[  AD  ]";
+
+		Renderer::Get().Submit(text, Vector2(UI_X, UI_Y), btnColor, UI_SORT_ORDER);
 		break;
 	}
 
@@ -99,8 +101,8 @@ void AdManager::Draw()
 	case EAdState::FINISHED:
 	{
 		// [보상 받기] 버튼
-		Color FinishedbtnColor = isHovered ? Color::White : Color::Green;
-		Renderer::Get().Submit("[ GET $ ]", Vector2(UI_X, UI_Y), FinishedbtnColor, UI_SORT_ORDER);
+		Color btnColor = isHovered ? Color::White : Color::Green;
+		Renderer::Get().Submit("[ GET $ ]", Vector2(UI_X, UI_Y), btnColor, UI_SORT_ORDER);
 		break;
 
 	}
@@ -114,6 +116,12 @@ bool AdManager::HandleClick(int x, int y)
 		return true;
 	}
 	if (currentState == EAdState::HIDDEN)
+	{
+		return false;
+	}
+
+	// 비활성화 상태면 클릭 무시
+	if (bDisabledByEvent)
 	{
 		return false;
 	}
