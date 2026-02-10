@@ -15,7 +15,7 @@ public:
 	{
 		NONE,
 		EARTHQUAKE,    // 지진: 일시 정지
-		GOLD_RUSH,     // 광물광: 속도 증가
+		GOLD_RUSH,     // 피버타임: 속도 증가
 		MAX_COUNT
 	};
 
