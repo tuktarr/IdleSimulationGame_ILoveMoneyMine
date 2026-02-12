@@ -3,16 +3,26 @@
 #include "Core/Input.h"
 #include "Render/Renderer.h"
 #include "Engine/Engine.h"
-#include <fstream>
 
 namespace Wanted
 {
     MenuLevel::MenuLevel()
     {
         // 세이브 파일이 존재하는지 미리 체크
-        std::ifstream file("../Config/SaveData.txt");
-        bHasSaveFile = file.good();
-        file.close();
+        FILE* file = nullptr;
+
+        // 리턴값이 0이면 성공, 그 외에는 에러입니다.
+        errno_t err = fopen_s(&file, "../Config/SaveData.txt", "r");
+
+        if (err == 0 && file != nullptr)
+        {
+            bHasSaveFile = true;
+            fclose(file);
+        }
+        else
+        {
+            bHasSaveFile = false;
+        }
     }
 
     MenuLevel::~MenuLevel()
@@ -29,14 +39,14 @@ namespace Wanted
     {
         super::Draw();
 
-        // 1. 타이틀 로고 (ASCII Art)
-        Renderer::Get().Submit(" ___  _      ___ __   __ ___   __  __  ___  _  _ ___ __   __  __  __ ___ _  _ ___ ", Vector2(30, 3), Color::Yellow, 0);
-        Renderer::Get().Submit("|_ _| | |    / _ \\\\ \\ / // _ \\ |  \\/  |/ _ \\| \\| | __\\ \\ / / |  \\/  |_ _| \\| | __|", Vector2(30, 4), Color::Yellow, 0);
-        Renderer::Get().Submit(" | |  | |__ | (_) |\\ V /|  __/ | |\\/| | (_) | .` | _| \\ V /  | |\\/| || || .` | _| ", Vector2(30, 5), Color::Yellow, 0);
-        Renderer::Get().Submit("|___| |____| \\___/  \\_/  \\___| |_|  |_|\\___/|_|\\_|___| |_|   |_|  |_|___|_|\\_|___|", Vector2(30, 6), Color::Yellow, 0);
-        Renderer::Get().Submit("========================= SIMULATOR =========================", Vector2(30, 8), Color::DarkGray, 0);
+        // 타이틀 로고
+        Renderer::Get().Submit(" ___  _      ___ __   __ ___   __  __  ___  _  _ ___ __   __  __  __ ___ _  _ ___ ", Vector2(15, 3), Color::Yellow, 0);
+        Renderer::Get().Submit("|_ _| | |    / _ \\\\ \\ / // _ \\ |  \\/  |/ _ \\| \\| | __\\ \\ / / |  \\/  |_ _| \\| | __|", Vector2(15, 4), Color::Yellow, 0);
+        Renderer::Get().Submit(" | |  | |__ | (_) |\\ V /|  __/ | |\\/| | (_) | .` | _| \\ V /  | |\\/| || || .` | _| ", Vector2(15, 5), Color::Yellow, 0);
+        Renderer::Get().Submit("|___| |____| \\___/  \\_/  \\___| |_|  |_|\\___/|_|\\_|___| |_|   |_|  |_|___|_|\\_|___|", Vector2(15, 6), Color::Yellow, 0);
+        Renderer::Get().Submit("========================= SIMULATOR =========================", Vector2(25, 8), Color::DarkGray, 0);
 
-        // 2. 마우스 위치 확인 (하이라이트 효과용)
+        // 마우스 위치 확인
         Vector2 mousePos = Input::Get().GetMousePosition();
 
         // 새 게임 버튼

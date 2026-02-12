@@ -11,7 +11,7 @@ class Player : public Actor
 	RTTI_DECLARATIONS(Player, Actor);
 
 public:
-	Player() : gold(0) {}
+	Player() : gold(30000) {}
 	~Player();
 	// 내가 가진 자산이 광산의 구입비용보다 많거나 같은지 비교
 	bool TryPurchase(int cost);

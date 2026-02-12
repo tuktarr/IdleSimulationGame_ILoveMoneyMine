@@ -2,7 +2,7 @@
 #include "Render/Renderer.h"
 
 EventManager::EventManager()
-	: durationTimer(2.0f), nextEventTimer(10.0f)
+	: durationTimer(2.0f), nextEventTimer(30.0f)
 {
 
 }
@@ -56,7 +56,7 @@ void EventManager::TriggerRandomEvent()
 	if (currentEvent == EEventType::EARTHQUAKE)
 	{
 		// 지진은 짧게 (어지러움 방지 및 긴장감 극대화)
-		durationTimer.SetTargetTime(2.0f);
+		durationTimer.SetTargetTime(3.0f);
 	}
 	else if (currentEvent == EEventType::GOLD_RUSH)
 	{

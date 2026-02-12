@@ -46,7 +46,7 @@ private:
 	static const int BUTTON_WIDTH = 10; // 버튼 크기
 
 	const float AD_DURATION = 5.0f; // 광고 지속 시간
-	const float AD_COOLDOWN = 5.0f; // 광고 다시 뜨는 시간
+	const float AD_COOLDOWN = 20.0f; // 광고 다시 뜨는 시간
 	
 	EAdState currentState; // 현재 상태
 	Timer adStateTimer; // 상태 관리용 타이머

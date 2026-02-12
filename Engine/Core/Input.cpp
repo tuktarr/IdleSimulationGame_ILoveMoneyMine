@@ -121,18 +121,13 @@ namespace Wanted
 				// 마우스 이벤트 처리.
 				case MOUSE_EVENT:
 				{
-					// [디버깅] 원본 좌표 확인
-					int rawX = record.Event.MouseEvent.dwMousePosition.X;
-					int rawY = record.Event.MouseEvent.dwMousePosition.Y;
+					//// [디버깅] 원본 좌표 확인
+					//int rawX = record.Event.MouseEvent.dwMousePosition.X;
+					//int rawY = record.Event.MouseEvent.dwMousePosition.Y;
 
-					// [디버깅] 버튼 상태 확인 (비트 마스크)
-					DWORD buttonState = record.Event.MouseEvent.dwButtonState;
-					bool isLeftDown = (buttonState & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
-
-					// 콘솔창 제목에 상태 출력 (화면을 어지럽히지 않음)
-					char debugMsg[256];
-					sprintf_s(debugMsg, "Mouse: (%d, %d) | LeftDown: %d", rawX, rawY, isLeftDown);
-					SetConsoleTitleA(debugMsg);
+					//// [디버깅] 버튼 상태 확인 (비트 마스크)
+					//DWORD buttonState = record.Event.MouseEvent.dwButtonState;
+					//bool isLeftDown = (buttonState & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
 
 					// 마우스 x 위치 설정.
 					mousePosition.x = record.Event.MouseEvent.dwMousePosition.X;

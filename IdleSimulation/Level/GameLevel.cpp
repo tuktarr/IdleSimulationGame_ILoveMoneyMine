@@ -197,12 +197,21 @@ void GameLevel::HandleInput()
         Engine::Get().QuitEngine();
         return;
     }
+    // 마우스 좌표 가져오기
+    Vector2 mousePos = Input::Get().GetMousePosition();
 
     if (eventManager && eventManager->GetCurrentEvent() != EventManager::EEventType::NONE)
     {
         // 클릭을 시도했을 때, 로그를 남겨 유저에게 알림을 줍니다.
         if (Input::Get().GetButtonDown(VK_LBUTTON))
         {
+            // 이벤트 호출 시, 도움말 영역은 마우스 클릭이 작동하도록 함
+            if (mousePos.x >= 100 && mousePos.x <= 110 && mousePos.y == 25)
+            {
+                helpManager->Open();
+                return;
+            }
+
             if (eventManager->GetCurrentEvent() == EventManager::EEventType::EARTHQUAKE)
             {
                 SetLog("지진 때문에 정신이 없어 클릭할 수 없습니다!");
@@ -215,8 +224,6 @@ void GameLevel::HandleInput()
         return;
     }
 
-    // 마우스 좌표 가져오기
-    Vector2 mousePos = Input::Get().GetMousePosition();
 
     if (Input::Get().GetButtonDown(VK_LBUTTON))
     {
