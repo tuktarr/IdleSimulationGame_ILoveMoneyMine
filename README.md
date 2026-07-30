@@ -16,8 +16,9 @@
 
 #### 핵심 시스템 설계
 1. 프로그래밍 언어 및 설계 (C++ & OOP)
-- 커스텀 RTTI(Run-Time Type Information) 구현: * 표준 dynamic_cast 대신 클래스의 주소값과 매크로를 이용한 자체 타입 식별 시스템을 구축하여 객체 지향의 다형성을 안전하고 빠르게 활용함 (Actor::As<T>()).
-- 디자인 패턴 활용:
+- 커스텀 RTTI(Run-Time Type Information) 구현 
+  => 표준 dynamic_cast 대신 클래스의 주소값과 매크로를 이용한 자체 타입 식별 시스템을 구축하여 객체 지향의 다형성을 안전하고 빠르게 활용함 (Actor::As<T>()).
+- 디자인 패턴 활용
   => Singleton Pattern: Engine, Renderer, Input 등 전역 시스템의 단일 객체 보장 및 접근성 확보.
   => Observer Pattern (Subscriber): EventManager를 통해 이벤트 발생 시 Mine이나 AdManager가 스스로 상태를 변경하도록 하는 느슨한 결합(Loose Coupling) 설계.
   => Delegate (Callback): std::function을 활용하여 광고 종료나 채굴 완료 시 특정 로직을 실행하는 이벤트 기반 프로그래밍 구현.
